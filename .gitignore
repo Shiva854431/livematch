@@ -1,0 +1,6 @@
+node_modules
+dist
+.env
+server/data/admins.json
+server/data/pending.json
+server/data/store.json
