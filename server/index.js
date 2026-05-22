@@ -275,9 +275,13 @@ app.put('/api/admin/sports/:sport', authMiddleware, (req, res) => {
 // Serve static files in production (must come after all API routes)
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'dist')))
-  // SPA fallback - must come after all API routes
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'))
+  // SPA fallback - serve index.html for non-API routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      next()
+    } else {
+      res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'))
+    }
   })
 }
 
