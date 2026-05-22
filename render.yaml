@@ -9,7 +9,7 @@ services:
       - key: EMAIL_USER
         value: shivanakkanagoni17@gmail.com
       - key: EMAIL_PASS
-        value: ShivaKumar@123
+        value: uamryzfituJodet
       - key: JWT_SECRET
         value: strider-live-secret-key-2026
       - key: PORT
