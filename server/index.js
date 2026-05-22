@@ -22,14 +22,6 @@ const PORT = process.env.PORT || 3001
 app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '..', 'dist')))
-  app.use((_req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'))
-  })
-}
-
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
@@ -279,6 +271,15 @@ app.put('/api/admin/sports/:sport', authMiddleware, (req, res) => {
   storeApi.saveStore(store)
   res.json(store[sport])
 })
+
+// Serve static files in production (must come after all API routes)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '..', 'dist')))
+  // SPA fallback - must come after all API routes
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'))
+  })
+}
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err)
