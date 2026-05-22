@@ -22,6 +22,14 @@ const PORT = process.env.PORT || 3001
 app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
 
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '..', 'dist')))
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'))
+  })
+}
+
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
