@@ -124,52 +124,17 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
     }
     storeApi.savePending(pending)
 
-    const devMode = process.env.DEV_OTP === 'true'
-
-    if (devMode) {
-      console.log(`[DEV OTP] user="${username}" email=${email} code=${otp}`)
-      return res.json({
-        success: true,
-        message: 'Development mode: use the OTP shown on screen',
-        devOtp: otp,
-      })
-    }
-
-    // Try email first
+    // Try email only
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       try {
         await sendOtpEmail(email, otp, fullName)
         res.json({ success: true, message: 'OTP sent to your email' })
       } catch (mailErr) {
         console.error('send-otp email failed:', mailErr.message)
-        console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
-        res.json({
-          success: true,
-          message: 'Email could not be sent. Use OTP shown on screen.',
-          devOtp: otp,
-        })
-      }
-    } else if (process.env.FAST2SMS_API_KEY) {
-      // Fallback to SMS if email not configured
-      try {
-        await sendOtpSms(mobile, otp)
-        res.json({ success: true, message: 'OTP sent to your mobile' })
-      } catch (smsErr) {
-        console.error('send-otp SMS failed:', smsErr.message)
-        console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
-        res.json({
-          success: true,
-          message: 'SMS could not be sent. Use OTP shown on screen.',
-          devOtp: otp,
-        })
+        res.status(500).json({ error: 'Failed to send OTP to email. Please check email configuration.' })
       }
     } else {
-      console.log(`[DEV OTP] No email or SMS configured. user="${username}" code=${otp}`)
-      res.json({
-        success: true,
-        message: 'Email/SMS not configured — use OTP on screen',
-        devOtp: otp,
-      })
+      res.status(500).json({ error: 'Email not configured. Please set EMAIL_USER and EMAIL_PASS.' })
     }
   } catch (err) {
     console.error('send-otp', err)
