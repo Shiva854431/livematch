@@ -58,9 +58,10 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
               overs: '0.0',
               crr: 0,
               rrr: 0,
+              target: 0,
               striker: { name: '', runs: 0, balls: 0 },
               nonStriker: { name: '', runs: 0, balls: 0 },
-              bowler: { name: '', overs: '0', wickets: 0, runs: 0 },
+              bowler: { name: '', overs: '0', wickets: 0, runs: 0, economy: 0 },
             },
           }
         : {}),
@@ -95,6 +96,14 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
 
   const setScore = async (side: 'teamA' | 'teamB', score: number) => {
     await patchTeam(side, { score: Math.max(0, score) })
+    
+    // Auto-calculate cricket statistics when score changes
+    if (sport === 'cricket' && match?.cricket) {
+      const overs = parseFloat(match.period.replace(' ov', '')) || 0
+      const teamScore = Math.max(0, score)
+      const crr = overs > 0 ? teamScore / overs : 0
+      await patchMatch({ cricket: { ...match.cricket, crr: Math.round(crr * 100) / 100 } })
+    }
   }
 
   const setPlayer = async (
@@ -103,13 +112,25 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
     patch: Partial<Player>,
   ) => {
     if (!match) return
+    const updatedPlayers = match[side].players.map((p) => (p.id === playerId ? { ...p, ...patch } : p))
+    
+    // Auto-calculate cricket statistics
+    if (sport === 'cricket' && match.cricket) {
+      const updatedPlayer = updatedPlayers.find(p => p.id === playerId)
+      if (updatedPlayer && updatedPlayer.runs !== undefined && updatedPlayer.balls !== undefined) {
+        // Calculate strike rate: (runs / balls) * 100
+        const strikeRate = updatedPlayer.balls > 0 ? (updatedPlayer.runs / updatedPlayer.balls) * 100 : 0
+        updatedPlayer.strikeRate = Math.round(strikeRate * 100) / 100
+      }
+    }
+    
     await onSave({
       ...data,
       currentMatch: {
         ...match,
         [side]: {
           ...match[side],
-          players: match[side].players.map((p) => (p.id === playerId ? { ...p, ...patch } : p)),
+          players: updatedPlayers,
         },
       },
     })
@@ -278,6 +299,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
                   <>
                     <input type="number" value={p.runs ?? 0} onChange={(e) => setPlayer(side, p.id, { runs: Number(e.target.value) })} className="w-14 px-1 py-0.5 rounded bg-slate-900 border border-slate-600 text-xs" title="Runs" />
                     <input type="number" value={p.balls ?? 0} onChange={(e) => setPlayer(side, p.id, { balls: Number(e.target.value) })} className="w-14 px-1 py-0.5 rounded bg-slate-900 border border-slate-600 text-xs" title="Balls" />
+                    <span className="text-xs text-emerald-400 w-16">SR: {p.strikeRate ? p.strikeRate.toFixed(1) : '0.0'}</span>
                   </>
                 )}
                 {sport === 'kabaddi' && (
@@ -291,6 +313,87 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
           </div>
         ))}
       </div>
+
+      {sport === 'cricket' && match.cricket && (
+        <div className="glass rounded-xl p-4 border border-emerald-500/20">
+          <h3 className="text-sm font-bold text-emerald-400 mb-3">Cricket Statistics (Auto-calculated)</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <span className="text-xs text-slate-500">Current Run Rate</span>
+              <p className="text-lg font-bold">{match.cricket.crr.toFixed(2)}</p>
+            </div>
+            <div>
+              <span className="text-xs text-slate-500">Required Run Rate</span>
+              <p className="text-lg font-bold">{match.cricket.rrr.toFixed(2)}</p>
+            </div>
+            <div>
+              <span className="text-xs text-slate-500">Overs</span>
+              <p className="text-lg font-bold">{match.period}</p>
+            </div>
+            <div>
+              <span className="text-xs text-slate-500">Target</span>
+              <input
+                type="number"
+                value={match.cricket.target || 0}
+                onChange={(e) => {
+                  const target = Number(e.target.value)
+                  const overs = parseFloat(match.period.replace(' ov', '')) || 0
+                  const remainingOvers = 20 - overs
+                  const chasingScore = match.teamB.score
+                  const runsNeeded = target - chasingScore
+                  const rrr = remainingOvers > 0 ? runsNeeded / remainingOvers : 0
+                  patchMatch({ cricket: { ...match.cricket, target, rrr: Math.round(rrr * 100) / 100 } })
+                }}
+                className="w-full mt-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
+                placeholder="Set target"
+              />
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-slate-700">
+            <span className="text-xs text-slate-500">Bowler Stats</span>
+            <div className="flex gap-2 mt-2">
+              <input
+                value={match.cricket.bowler.name}
+                onChange={(e) => patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, name: e.target.value } } })}
+                className="flex-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
+                placeholder="Bowler name"
+              />
+              <input
+                type="number"
+                value={match.cricket.bowler.overs}
+                onChange={(e) => {
+                  const overs = Number(e.target.value)
+                  const runs = match.cricket.bowler.runs
+                  const economy = overs > 0 ? runs / overs : 0
+                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, overs, economy: Math.round(economy * 100) / 100 } } })
+                }}
+                className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
+                title="Overs"
+              />
+              <input
+                type="number"
+                value={match.cricket.bowler.wickets}
+                onChange={(e) => patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, wickets: Number(e.target.value) } } })}
+                className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
+                title="Wickets"
+              />
+              <input
+                type="number"
+                value={match.cricket.bowler.runs}
+                onChange={(e) => {
+                  const runs = Number(e.target.value)
+                  const overs = match.cricket.bowler.overs
+                  const economy = overs > 0 ? runs / overs : 0
+                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, runs, economy: Math.round(economy * 100) / 100 } } })
+                }}
+                className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
+                title="Runs given"
+              />
+              <span className="text-xs text-emerald-400 w-16">Eco: {match.cricket.bowler.economy ? match.cricket.bowler.economy.toFixed(2) : '0.00'}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
