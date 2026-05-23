@@ -41,24 +41,34 @@ function generateOtp() {
 
 /** First-time setup: create admin from .env when no admins exist (no OTP required). */
 async function bootstrapAdminIfNeeded() {
-  if (storeApi.hasAdmin()) return
   const username = process.env.BOOTSTRAP_ADMIN_USER
   const password = process.env.BOOTSTRAP_ADMIN_PASS
   if (!username || !password) return
 
   const admins = storeApi.getAdmins()
-  admins.push({
-    id: crypto.randomUUID(),
-    fullName: 'Bootstrap Admin',
-    mobile: '0000000000',
-    state: 'N/A',
-    email: process.env.EMAIL_USER ?? 'admin@local',
-    username,
-    passwordHash: await bcrypt.hash(password, 10),
-    createdAt: new Date().toISOString(),
-  })
-  storeApi.saveAdmins(admins)
-  console.log(`Bootstrap admin created: username="${username}" (change password after first login)`)
+  const existingIndex = admins.findIndex((a) => a.username === username)
+
+  if (existingIndex !== -1) {
+    // Update existing bootstrap admin with new password
+    admins[existingIndex].passwordHash = await bcrypt.hash(password, 10)
+    admins[existingIndex].email = process.env.EMAIL_USER ?? admins[existingIndex].email
+    storeApi.saveAdmins(admins)
+    console.log(`Bootstrap admin updated: username="${username}"`)
+  } else {
+    // Create new bootstrap admin
+    admins.push({
+      id: crypto.randomUUID(),
+      fullName: 'Bootstrap Admin',
+      mobile: '0000000000',
+      state: 'N/A',
+      email: process.env.EMAIL_USER ?? 'admin@local',
+      username,
+      passwordHash: await bcrypt.hash(password, 10),
+      createdAt: new Date().toISOString(),
+    })
+    storeApi.saveAdmins(admins)
+    console.log(`Bootstrap admin created: username="${username}" (change password after first login)`)
+  }
 }
 
 // ——— Health ———
