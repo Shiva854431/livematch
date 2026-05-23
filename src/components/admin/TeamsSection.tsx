@@ -1,4 +1,5 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Save } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import type { Sport } from '../../types'
 
 const uid = () => crypto.randomUUID()
@@ -11,7 +12,15 @@ interface TeamsSectionProps {
 }
 
 export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
-  const addTeam = async () => {
+  const [localData, setLocalData] = useState<SportData>(data)
+  const [hasChanges, setHasChanges] = useState(false)
+
+  useEffect(() => {
+    setLocalData(data)
+    setHasChanges(false)
+  }, [data])
+
+  const addTeam = () => {
     const team: TeamRecord = {
       id: uid(),
       name: 'New Team',
@@ -22,25 +31,28 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
       seasonWins: 0,
       seasonPoints: 0,
     }
-    await onSave({ ...data, teams: [...data.teams, team] })
+    setLocalData({ ...localData, teams: [...localData.teams, team] })
+    setHasChanges(true)
   }
 
-  const updateTeam = async (id: string, patch: Partial<TeamRecord>) => {
-    await onSave({
-      ...data,
-      teams: data.teams.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+  const updateTeam = (id: string, patch: Partial<TeamRecord>) => {
+    setLocalData({
+      ...localData,
+      teams: localData.teams.map((t) => (t.id === id ? { ...t, ...patch } : t)),
     })
+    setHasChanges(true)
   }
 
-  const removeTeam = async (id: string) => {
+  const removeTeam = (id: string) => {
     if (!confirm('Delete this team?')) return
-    await onSave({ ...data, teams: data.teams.filter((t) => t.id !== id) })
+    setLocalData({ ...localData, teams: localData.teams.filter((t) => t.id !== id) })
+    setHasChanges(true)
   }
 
-  const addPlayer = async (teamId: string) => {
-    await onSave({
-      ...data,
-      teams: data.teams.map((t) =>
+  const addPlayer = (teamId: string) => {
+    setLocalData({
+      ...localData,
+      teams: localData.teams.map((t) =>
         t.id === teamId
           ? {
               ...t,
@@ -59,16 +71,17 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
           : t,
       ),
     })
+    setHasChanges(true)
   }
 
-  const updatePlayer = async (
+  const updatePlayer = (
     teamId: string,
     playerId: string,
     patch: Partial<TeamRecord['players'][0]>,
   ) => {
-    await onSave({
-      ...data,
-      teams: data.teams.map((t) =>
+    setLocalData({
+      ...localData,
+      teams: localData.teams.map((t) =>
         t.id === teamId
           ? {
               ...t,
@@ -77,28 +90,46 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
           : t,
       ),
     })
+    setHasChanges(true)
   }
 
-  const removePlayer = async (teamId: string, playerId: string) => {
-    await onSave({
-      ...data,
-      teams: data.teams.map((t) =>
+  const removePlayer = (teamId: string, playerId: string) => {
+    setLocalData({
+      ...localData,
+      teams: localData.teams.map((t) =>
         t.id === teamId ? { ...t, players: t.players.filter((p) => p.id !== playerId) } : t,
       ),
     })
+    setHasChanges(true)
+  }
+
+  const handleSave = async () => {
+    await onSave(localData)
+    setHasChanges(false)
   }
 
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-slate-200">Teams — {sport}</h2>
-        <button
-          type="button"
-          onClick={addTeam}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-sm font-semibold"
-        >
-          <Plus className="h-4 w-4" /> Add Team
-        </button>
+        <div className="flex gap-2">
+          {hasChanges && (
+            <button
+              type="button"
+              onClick={handleSave}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500 text-slate-950 text-sm font-semibold"
+            >
+              <Save className="h-4 w-4" /> Save Changes
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={addTeam}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-sm font-semibold"
+          >
+            <Plus className="h-4 w-4" /> Add Team
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-700/50">
@@ -115,7 +146,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
             </tr>
           </thead>
           <tbody>
-            {data.teams.map((team) => (
+            {localData.teams.map((team) => (
               <tr key={team.id} className="border-t border-slate-700/40">
                 <td className="p-2">
                   <input
@@ -171,7 +202,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
         </table>
       </div>
 
-      {data.teams.map((team) => (
+      {localData.teams.map((team) => (
         <div key={team.id} className="glass rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold">{team.name} — Players</h3>
