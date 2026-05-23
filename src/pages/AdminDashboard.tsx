@@ -7,11 +7,13 @@ import { LiveMatchSection } from '../components/admin/LiveMatchSection'
 import { UpcomingSection } from '../components/admin/UpcomingSection'
 import { TopScorersSection } from '../components/admin/TopScorersSection'
 import { SeasonStatsSection } from '../components/admin/SeasonStatsSection'
+import { VideoUploadSection } from '../components/admin/VideoUploadSection'
+import { ImageUploadSection } from '../components/admin/ImageUploadSection'
 import { SPORT_OPTIONS } from '../types/sportAdmin'
 import type { Sport } from '../types'
 import type { Route } from '../hooks/useRouter'
 
-type AdminTab = 'teams' | 'live' | 'upcoming' | 'scorers' | 'stats'
+type AdminTab = 'teams' | 'live' | 'upcoming' | 'scorers' | 'stats' | 'videos' | 'images'
 
 interface AdminDashboardProps {
   onNavigate: (route: Route) => void
@@ -34,6 +36,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     { id: 'upcoming', label: 'Upcoming' },
     { id: 'scorers', label: 'Top Scorers' },
     { id: 'stats', label: 'Season Stats' },
+    { id: 'videos', label: 'Video Highlights' },
+    { id: 'images', label: 'Match Images' },
   ]
 
   return (
@@ -126,6 +130,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 {tab === 'upcoming' && <UpcomingSection data={data} onSave={save} />}
                 {tab === 'scorers' && <TopScorersSection data={data} onSave={save} />}
                 {tab === 'stats' && <SeasonStatsSection sport={sport} data={data} onSave={save} />}
+                {tab === 'videos' && <VideoUploadSection sport={sport} onSave={save} />}
+                {tab === 'images' && <ImageUploadSection sport={sport} onSave={save} />}
               </>
             )}
           </main>

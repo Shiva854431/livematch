@@ -1,11 +1,16 @@
-import { useState } from 'react'
-import { Bell, Search, Video, Shield, Radio, User, Settings, Info, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Bell, Search, Video, Shield, Radio, User, Settings, Info, X, Moon, Sun, MessageSquare } from 'lucide-react'
 import { LeftSidebar } from '../components/LeftSidebar'
 import { LiveTicker } from '../components/LiveTicker'
 import { LiveMatchHero } from '../components/LiveMatchHero'
 import { MatchTabs } from '../components/MatchTabs'
 import { RightSidebar } from '../components/RightSidebar'
+import { SearchModal } from '../components/SearchModal'
+import { NotificationPanel } from '../components/NotificationPanel'
+import { LiveChat } from '../components/LiveChat'
 import { useMatches } from '../context/MatchContext'
+import { useUser } from '../context/UserContext'
+import { useNotifications } from '../context/NotificationContext'
 import type { Sport } from '../types'
 import type { Route } from '../hooks/useRouter'
 
@@ -15,10 +20,32 @@ interface PublicDashboardProps {
 
 export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
   const { state, activeMatch, setActiveMatchId, getMatch, sportStore } = useMatches()
+  const { user, isAuthenticated } = useUser()
+  const { unreadCount } = useNotifications()
   const [selectedSport, setSelectedSport] = useState<Sport | 'all'>('all')
   const [showProfile, setShowProfile] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showChat, setShowChat] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    if (user?.theme) {
+      setTheme(user.theme)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light')
+      document.documentElement.classList.remove('dark')
+    } else {
+      document.documentElement.classList.add('dark')
+      document.documentElement.classList.remove('light')
+    }
+  }, [theme])
 
   const loadMatch = (id: string) => {
     if (getMatch(id)) setActiveMatchId(id)
@@ -39,14 +66,24 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             <span className="font-display font-bold tracking-wide">STRIDER</span>
           </div>
           <div className="flex-1 relative max-w-lg hidden sm:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-            <input
-              type="search"
-              placeholder="Search teams, players, tournaments..."
-              className="w-full pl-11 pr-4 py-2.5 rounded-2xl bg-black/30 border border-white/[0.08] text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30 transition-all"
-            />
+            <button
+              type="button"
+              onClick={() => setShowSearch(true)}
+              className="w-full text-left pl-11 pr-4 py-2.5 rounded-2xl bg-black/30 border border-white/[0.08] text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/30 transition-all flex items-center"
+            >
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <span className="text-slate-500">Search teams, players, tournaments...</span>
+            </button>
           </div>
           <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {theme === 'dark' ? 'Light' : 'Dark'}
+            </button>
             <button
               type="button"
               onClick={() => setShowAbout(true)}
@@ -65,16 +102,16 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             </button>
             <button
               type="button"
-              onClick={() => setShowProfile(true)}
+              onClick={() => isAuthenticated ? onNavigate('/user/profile') : onNavigate('/user/login')}
               className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
             >
               <User className="h-4 w-4" />
-              Profile
+              {isAuthenticated ? 'Profile' : 'Login'}
             </button>
             <button
               type="button"
               onClick={() => onNavigate('/admin/login')}
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
+              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
             >
               <Shield className="h-4 w-4" />
               Admin
@@ -88,14 +125,28 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             </button>
             <button
               type="button"
-              className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
-              aria-label="Notifications"
+              onClick={() => setShowChat(!showChat)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
             >
-              <Bell className="h-5 w-5" />
+              <MessageSquare className="h-4 w-4" />
+              Live Chat
             </button>
             <button
               type="button"
-              onClick={() => setShowProfile(true)}
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all relative"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => isAuthenticated ? onNavigate('/user/profile') : onNavigate('/user/login')}
               className="sm:hidden h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 ring-2 ring-white/10 shadow-lg flex items-center justify-center"
             >
               <User className="h-5 w-5 text-white" />
@@ -206,120 +257,23 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
         </main>
       </div>
 
-      {/* Profile Modal */}
-      {showProfile && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-strong rounded-2xl p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Profile</h2>
-              <button type="button" onClick={() => setShowProfile(false)} className="p-1 hover:bg-white/10 rounded-lg">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
-                  <User className="h-8 w-8 text-white" />
-                </div>
-                <div>
-                  <p className="font-semibold">Guest User</p>
-                  <p className="text-sm text-slate-400">Welcome to Strider Live</p>
-                </div>
-              </div>
-              <div className="pt-4 border-t border-slate-700">
-                <p className="text-sm text-slate-400 mb-2">Account Type</p>
-                <p className="font-medium">Public Viewer</p>
-              </div>
-              <div className="pt-4 border-t border-slate-700">
-                <p className="text-sm text-slate-400 mb-2">Favorite Sports</p>
-                <div className="flex gap-2 flex-wrap">
-                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Cricket</span>
-                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Kabaddi</span>
-                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Football</span>
-                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Basketball</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <SearchModal
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        onSelectMatch={loadMatch}
+      />
 
-      {/* Settings Modal */}
-      {showSettings && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-strong rounded-2xl p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Settings</h2>
-              <button type="button" onClick={() => setShowSettings(false)} className="p-1 hover:bg-white/10 rounded-lg">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm">Dark Mode</span>
-                <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm">Notifications</span>
-                <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm">Auto-refresh matches</span>
-                <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
-                </div>
-              </div>
-              <div className="pt-4 border-t border-slate-700">
-                <p className="text-sm text-slate-400 mb-2">Language</p>
-                <select className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-600 text-sm">
-                  <option>English</option>
-                  <option>Hindi</option>
-                  <option>Telugu</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <NotificationPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
 
-      {/* About Modal */}
-      {showAbout && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-strong rounded-2xl p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">About Strider Live</h2>
-              <button type="button" onClick={() => setShowAbout(false)} className="p-1 hover:bg-white/10 rounded-lg">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center mx-auto mb-3">
-                  <Radio className="h-8 w-8 text-white" />
-                </div>
-                <p className="font-display font-bold tracking-wide text-lg">STRIDER LIVE</p>
-                <p className="text-sm text-slate-400">Version 1.0.0</p>
-              </div>
-              <div className="pt-4 border-t border-slate-700">
-                <p className="text-sm text-slate-400 mb-2">Features</p>
-                <ul className="text-sm space-y-1">
-                  <li>• Live match scores and updates</li>
-                  <li>• Multi-sport support (Cricket, Kabaddi, Football, Basketball)</li>
-                  <li>• Real-time statistics</li>
-                  <li>• Team and player information</li>
-                </ul>
-              </div>
-              <div className="pt-4 border-t border-slate-700">
-                <p className="text-sm text-slate-400">Contact</p>
-                <p className="text-sm">support@striderlive.com</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {match && (
+        <LiveChat
+          matchId={match.id}
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
+        />
       )}
     </div>
   )

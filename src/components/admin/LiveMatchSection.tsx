@@ -61,7 +61,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
               target: 0,
               striker: { name: '', runs: 0, balls: 0 },
               nonStriker: { name: '', runs: 0, balls: 0 },
-              bowler: { name: '', overs: '0', wickets: 0, runs: 0, economy: 0 },
+              bowler: { name: '', overs: '0', wickets: 0, runs: 0 },
             },
           }
         : {}),

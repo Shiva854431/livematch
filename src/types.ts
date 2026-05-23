@@ -43,10 +43,9 @@ export interface CricketTelemetry {
   overs: string
   crr: number
   rrr: number
-  target: number
   striker: { name: string; runs: number; balls: number }
   nonStriker: { name: string; runs: number; balls: number }
-  bowler: { name: string; overs: string; wickets: number; runs: number; economy: number }
+  bowler: { name: string; overs: string; wickets: number; runs: number }
 }
 
 export interface KabaddiTelemetry {
@@ -85,4 +84,19 @@ export interface AppState {
   matches: Record<string, LiveMatch>
   miniMatches: MiniMatch[]
   activeMatchId: string
+}
+
+export interface UserProfile {
+  id: string
+  username: string
+  email: string
+  fullName: string
+  avatar?: string
+  favoriteTeams: string[]
+  favoritePlayers: string[]
+  favoriteMatches: string[]
+  notificationsEnabled: boolean
+  theme: 'dark' | 'light'
+  language: string
+  createdAt: string
 }

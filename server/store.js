@@ -9,6 +9,8 @@ const FILES = {
   admins: path.join(DATA_DIR, 'admins.json'),
   pending: path.join(DATA_DIR, 'pending.json'),
   store: path.join(DATA_DIR, 'store.json'),
+  videos: path.join(DATA_DIR, 'videos.json'),
+  images: path.join(DATA_DIR, 'images.json'),
 }
 
 function ensureDir() {
@@ -59,6 +61,12 @@ export const storeApi = {
 
   getStore: () => read(FILES.store, defaultStore()),
   saveStore: (data) => write(FILES.store, data),
+
+  getVideos: () => read(FILES.videos, []),
+  saveVideos: (data) => write(FILES.videos, data),
+
+  getImages: () => read(FILES.images, []),
+  saveImages: (data) => write(FILES.images, data),
 
   hasAdmin: () => storeApi.getAdmins().length > 0,
 }

@@ -6,6 +6,8 @@ import cors from 'cors'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import multer from 'multer'
+import fs from 'fs'
 import { storeApi } from './store.js'
 import { sendOtpEmail, sendOtpSms } from './mail.js'
 import { seedIfEmpty } from './seed.js'
@@ -18,6 +20,46 @@ bootstrapAdminIfNeeded()
 
 const app = express()
 const PORT = process.env.PORT || 3001
+
+// Configure multer for video uploads
+const upload = multer({
+  dest: path.join(__dirname, '../public/uploads'),
+  limits: {
+    fileSize: 500 * 1024 * 1024, // 500MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only video files are allowed'))
+    }
+  },
+})
+
+// Configure multer for image uploads
+const uploadImage = multer({
+  dest: path.join(__dirname, '../public/uploads/images'),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only image files are allowed'))
+    }
+  },
+})
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../public/uploads')
+const imagesDir = path.join(__dirname, '../public/uploads/images')
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true })
+}
 
 app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
@@ -260,6 +302,194 @@ app.put('/api/admin/sports/:sport', authMiddleware, (req, res) => {
   store[sport] = req.body
   storeApi.saveStore(store)
   res.json(store[sport])
+})
+
+// ——— Video highlights ———
+
+app.post('/api/admin/videos/upload', authMiddleware, upload.single('video'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file provided' })
+    }
+
+    const { title, description, category, sport } = req.body
+    
+    // Generate unique filename
+    const videoId = crypto.randomUUID()
+    const ext = path.extname(req.file.originalname)
+    const newFilename = `${videoId}${ext}`
+    const videoPath = path.join(uploadsDir, newFilename)
+    
+    // Move uploaded file to final location
+    fs.renameSync(req.file.path, videoPath)
+    
+    // Generate video URL
+    const videoUrl = `/uploads/${newFilename}`
+    
+    // Store video metadata
+    const videoMetadata = {
+      id: videoId,
+      title: title || req.file.originalname,
+      description: description || '',
+      category: category || 'amazing',
+      sport: sport || 'cricket',
+      videoUrl,
+      thumbnail: videoUrl, // In production, generate actual thumbnail
+      duration: '0:00', // Will be updated when video is processed
+      uploadedAt: Date.now(),
+    }
+    
+    // Save to store
+    const videos = storeApi.getVideos() || []
+    videos.push(videoMetadata)
+    storeApi.saveVideos(videos)
+    
+    res.json({
+      id: videoId,
+      url: videoUrl,
+      thumbnail: videoUrl,
+    })
+  } catch (err) {
+    console.error('Video upload error:', err)
+    res.status(500).json({ error: 'Failed to upload video' })
+  }
+})
+
+app.get('/api/public/videos/:sport', (req, res) => {
+  try {
+    const { sport } = req.params
+    const videos = storeApi.getVideos() || []
+    const sportVideos = videos.filter(v => v.sport === sport)
+    res.json(sportVideos)
+  } catch (err) {
+    console.error('Get videos error:', err)
+    res.status(500).json({ error: 'Failed to fetch videos' })
+  }
+})
+
+app.delete('/api/admin/videos/:videoId', authMiddleware, (req, res) => {
+  try {
+    const { videoId } = req.params
+    const videos = storeApi.getVideos() || []
+    const videoIndex = videos.findIndex(v => v.id === videoId)
+    
+    if (videoIndex === -1) {
+      return res.status(404).json({ error: 'Video not found' })
+    }
+    
+    const video = videos[videoIndex]
+    
+    // Delete video file
+    const videoPath = path.join(__dirname, '..', 'public', video.videoUrl)
+    if (fs.existsSync(videoPath)) {
+      fs.unlinkSync(videoPath)
+    }
+    
+    // Remove from store
+    videos.splice(videoIndex, 1)
+    storeApi.saveVideos(videos)
+    
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Delete video error:', err)
+    res.status(500).json({ error: 'Failed to delete video' })
+  }
+})
+
+// ——— Match images ———
+
+app.post('/api/admin/images/upload', authMiddleware, uploadImage.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' })
+    }
+
+    const { caption, category, sport, matchId } = req.body
+    
+    // Generate unique filename
+    const imageId = crypto.randomUUID()
+    const ext = path.extname(req.file.originalname)
+    const newFilename = `${imageId}${ext}`
+    const imagePath = path.join(imagesDir, newFilename)
+    
+    // Move uploaded file to final location
+    fs.renameSync(req.file.path, imagePath)
+    
+    // Generate image URL
+    const imageUrl = `/uploads/images/${newFilename}`
+    
+    // Store image metadata
+    const imageMetadata = {
+      id: imageId,
+      url: imageUrl,
+      caption: caption || req.file.originalname,
+      category: category || 'action',
+      sport: sport || 'cricket',
+      matchId: matchId || null,
+      uploadedAt: Date.now(),
+    }
+    
+    // Save to store
+    const images = storeApi.getImages() || []
+    images.push(imageMetadata)
+    storeApi.saveImages(images)
+    
+    res.json({
+      id: imageId,
+      url: imageUrl,
+    })
+  } catch (err) {
+    console.error('Image upload error:', err)
+    res.status(500).json({ error: 'Failed to upload image' })
+  }
+})
+
+app.get('/api/public/images/:sport', (req, res) => {
+  try {
+    const { sport } = req.params
+    const { matchId } = req.query
+    const images = storeApi.getImages() || []
+    
+    let sportImages = images.filter(img => img.sport === sport)
+    
+    if (matchId) {
+      sportImages = sportImages.filter(img => img.matchId === matchId)
+    }
+    
+    res.json(sportImages)
+  } catch (err) {
+    console.error('Get images error:', err)
+    res.status(500).json({ error: 'Failed to fetch images' })
+  }
+})
+
+app.delete('/api/admin/images/:imageId', authMiddleware, (req, res) => {
+  try {
+    const { imageId } = req.params
+    const images = storeApi.getImages() || []
+    const imageIndex = images.findIndex(img => img.id === imageId)
+    
+    if (imageIndex === -1) {
+      return res.status(404).json({ error: 'Image not found' })
+    }
+    
+    const image = images[imageIndex]
+    
+    // Delete image file
+    const imagePath = path.join(__dirname, '..', 'public', image.url)
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath)
+    }
+    
+    // Remove from store
+    images.splice(imageIndex, 1)
+    storeApi.saveImages(images)
+    
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Delete image error:', err)
+    res.status(500).json({ error: 'Failed to delete image' })
+  }
 })
 
 // Serve static files in production (must come after all API routes)

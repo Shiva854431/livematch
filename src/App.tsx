@@ -1,5 +1,8 @@
 import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { UserProvider } from './context/UserContext'
+import { NotificationProvider } from './context/NotificationContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { MatchProvider } from './context/MatchContext'
 import { useRouter } from './hooks/useRouter'
 import { AdminDashboard } from './pages/AdminDashboard'
@@ -31,9 +34,15 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <MatchProvider>
-        <AppRoutes />
-      </MatchProvider>
+      <UserProvider>
+        <NotificationProvider>
+          <LanguageProvider>
+            <MatchProvider>
+              <AppRoutes />
+            </MatchProvider>
+          </LanguageProvider>
+        </NotificationProvider>
+      </UserProvider>
     </AuthProvider>
   )
 }
