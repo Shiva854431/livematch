@@ -342,7 +342,8 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
                   const chasingScore = match.teamB.score
                   const runsNeeded = target - chasingScore
                   const rrr = remainingOvers > 0 ? runsNeeded / remainingOvers : 0
-                  patchMatch({ cricket: { ...match.cricket, rrr: Math.round(rrr * 100) / 100 } } as any })
+                  const updatedCricket = { ...match.cricket, rrr: Math.round(rrr * 100) / 100 } as any
+                  patchMatch({ cricket: updatedCricket })
                 }}
                 className="w-full mt-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 placeholder="Set target"
