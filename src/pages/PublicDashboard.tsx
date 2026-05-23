@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Search, Video, Shield, Radio, User, Moon, Sun, MessageSquare, Settings, Info } from 'lucide-react'
+import { Bell, Search, Video, Shield, Radio, User, Moon, Sun, MessageSquare } from 'lucide-react'
 import { LeftSidebar } from '../components/LeftSidebar'
 import { LiveTicker } from '../components/LiveTicker'
 import { LiveMatchHero } from '../components/LiveMatchHero'
@@ -23,8 +23,6 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
   const { user, isAuthenticated } = useUser()
   const { unreadCount } = useNotifications()
   const [selectedSport, setSelectedSport] = useState<Sport | 'all'>('all')
-  const [showSettings, _setShowSettings] = useState(false)
-  const [showAbout, _setShowAbout] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showChat, setShowChat] = useState(false)
@@ -82,22 +80,6 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             >
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               {theme === 'dark' ? 'Light' : 'Dark'}
-            </button>
-            <button
-              type="button"
-              onClick={() => _setShowAbout(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
-            >
-              <Info className="h-4 w-4" />
-              About
-            </button>
-            <button
-              type="button"
-              onClick={() => _setShowSettings(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
-            >
-              <Settings className="h-4 w-4" />
-              Settings
             </button>
             <button
               type="button"
