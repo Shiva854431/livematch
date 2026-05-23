@@ -60,19 +60,19 @@ export const api = {
 
   // User authentication
   userRegister: (body: UserRegisterBody) =>
-    request<UserAuthResponse>('/user/register', {
+    request<UserAuthResponse>('/api/user/register', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
   userLogin: (username: string, password: string) =>
-    request<UserAuthResponse>('/user/login', {
+    request<UserAuthResponse>('/api/user/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     }),
 
   userMe: () =>
-    request<UserProfile>('/user/me', { headers: userAuthHeaders() }),
+    request<UserProfile>('/api/user/me', { headers: userAuthHeaders() }),
 
   updateUserProfile: (data: Partial<UserProfile>) =>
     request<UserProfile>('/user/profile', {
