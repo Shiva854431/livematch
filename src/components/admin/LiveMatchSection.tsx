@@ -36,6 +36,12 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
   const match = data.currentMatch
   const [debouncedPatch, setDebouncedPatch] = useState<Partial<LiveMatch> | null>(null)
   const [debouncedData, setDebouncedData] = useState<SportData | null>(null)
+  const [localMatch, setLocalMatch] = useState<LiveMatch | null>(match)
+
+  // Sync local state when data changes
+  useEffect(() => {
+    setLocalMatch(match)
+  }, [match])
 
   // Debounced save for match updates to improve typing performance
   useEffect(() => {
@@ -108,11 +114,17 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
 
   const patchMatch = (patch: Partial<LiveMatch>) => {
     if (!match) return
+    // Update local state immediately for responsive typing
+    setLocalMatch(prev => prev ? { ...prev, ...patch } : null)
+    // Trigger debounced save
     setDebouncedPatch(patch)
   }
 
   const patchTeam = (side: 'teamA' | 'teamB', patch: Partial<LiveMatch['teamA']>) => {
     if (!match) return
+    // Update local state immediately for responsive typing
+    setLocalMatch(prev => prev ? { ...prev, [side]: { ...prev[side], ...patch } } : null)
+    // Trigger debounced save
     setDebouncedData({ ...data, currentMatch: { ...match, [side]: { ...match[side], ...patch } } })
   }
 
@@ -120,11 +132,11 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
     patchTeam(side, { score: Math.max(0, score) })
 
     // Auto-calculate cricket statistics when score changes
-    if (sport === 'cricket' && match?.cricket) {
-      const overs = parseFloat(match.period.replace(' ov', '')) || 0
+    if (sport === 'cricket' && localMatch?.cricket) {
+      const overs = parseFloat(localMatch.period.replace(' ov', '')) || 0
       const teamScore = Math.max(0, score)
       const crr = overs > 0 ? teamScore / overs : 0
-      patchMatch({ cricket: { ...match.cricket, crr: Math.round(crr * 100) / 100 } })
+      patchMatch({ cricket: { ...localMatch.cricket, crr: Math.round(crr * 100) / 100 } })
     }
   }
 
@@ -146,6 +158,16 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
       }
     }
 
+    // Update local state immediately for responsive typing
+    setLocalMatch(prev => prev ? {
+      ...prev,
+      [side]: {
+        ...prev[side],
+        players: updatedPlayers,
+      },
+    } : null)
+
+    // Trigger debounced save
     setDebouncedData({
       ...data,
       currentMatch: {
@@ -187,21 +209,23 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
     )
   }
 
+  const displayMatch = localMatch || match
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
         <button
           type="button"
-          onClick={() => patchMatch({ isPlaying: !match.isPlaying, status: !match.isPlaying ? 'live' : 'break' })}
+          onClick={() => patchMatch({ isPlaying: !displayMatch.isPlaying, status: !displayMatch.isPlaying ? 'live' : 'break' })}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${
-            match.isPlaying ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500 text-slate-950'
+            displayMatch.isPlaying ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500 text-slate-950'
           }`}
         >
-          {match.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          {match.isPlaying ? 'Stop' : 'Start'} Match
+          {displayMatch.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          {displayMatch.isPlaying ? 'Stop' : 'Start'} Match
         </button>
         <select
-          value={match.status}
+          value={displayMatch.status}
           onChange={(e) => patchMatch({ status: e.target.value as LiveMatch['status'] })}
           className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-sm"
         >
@@ -216,7 +240,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         <label className="block text-sm">
           <span className="text-slate-500 text-xs uppercase">Current location / stadium</span>
           <input
-            value={match.stadium}
+            value={displayMatch.stadium}
             onChange={(e) => patchMatch({ stadium: e.target.value })}
             className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-600"
           />
@@ -224,7 +248,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         <label className="block text-sm">
           <span className="text-slate-500 text-xs uppercase">Tournament</span>
           <input
-            value={match.tournament}
+            value={displayMatch.tournament}
             onChange={(e) => patchMatch({ tournament: e.target.value })}
             className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-600"
           />
@@ -232,7 +256,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         <label className="block text-sm">
           <span className="text-slate-500 text-xs uppercase">Period / Overs</span>
           <input
-            value={match.period}
+            value={displayMatch.period}
             onChange={(e) => patchMatch({ period: e.target.value })}
             className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-600"
           />
@@ -240,7 +264,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         <label className="block text-sm">
           <span className="text-slate-500 text-xs uppercase">Win by (margin)</span>
           <input
-            value={match.winMargin ?? ''}
+            value={displayMatch.winMargin ?? ''}
             onChange={(e) => patchMatch({ winMargin: e.target.value })}
             placeholder="e.g. 5 runs, 3 points"
             className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-600"
@@ -251,21 +275,21 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
       <div className="grid sm:grid-cols-2 gap-4">
         {(['teamA', 'teamB'] as const).map((side) => (
           <div key={side} className="glass rounded-xl p-4">
-            <p className="font-bold mb-2">{match[side].name}</p>
+            <p className="font-bold mb-2">{displayMatch[side].name}</p>
             <div className="flex items-center gap-2 mb-3">
-              <button type="button" onClick={() => setScore(side, match[side].score - 1)} className="h-9 w-9 rounded bg-slate-700 font-bold">−</button>
+              <button type="button" onClick={() => setScore(side, displayMatch[side].score - 1)} className="h-9 w-9 rounded bg-slate-700 font-bold">−</button>
               <input
                 type="number"
-                value={match[side].score}
+                value={displayMatch[side].score}
                 onChange={(e) => setScore(side, Number(e.target.value) || 0)}
                 className="flex-1 text-center text-2xl font-black tabular-nums bg-slate-900 rounded-lg py-1 border border-slate-600"
               />
-              <button type="button" onClick={() => setScore(side, match[side].score + 1)} className="h-9 w-9 rounded bg-emerald-600 font-bold">+</button>
+              <button type="button" onClick={() => setScore(side, displayMatch[side].score + 1)} className="h-9 w-9 rounded bg-emerald-600 font-bold">+</button>
             </div>
             <label className="text-xs text-slate-500">Payout if wins (₹)</label>
             <input
               type="number"
-              value={match[side].payoutOnWin}
+              value={displayMatch[side].payoutOnWin}
               onChange={(e) => patchTeam(side, { payoutOnWin: Number(e.target.value) || 0 })}
               className="w-full mt-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm tabular-nums"
             />
@@ -278,28 +302,28 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
           <Trophy className="h-4 w-4" /> Winner & Top Scorer (this match)
         </h3>
         <div className="flex flex-wrap gap-2 mb-3">
-          <button type="button" onClick={() => setWinner('teamA')} className="px-3 py-1.5 rounded-lg bg-slate-800 text-sm font-semibold">{match.teamA.abbr} Wins</button>
-          <button type="button" onClick={() => setWinner('teamB')} className="px-3 py-1.5 rounded-lg bg-slate-800 text-sm font-semibold">{match.teamB.abbr} Wins</button>
+          <button type="button" onClick={() => setWinner('teamA')} className="px-3 py-1.5 rounded-lg bg-slate-800 text-sm font-semibold">{displayMatch.teamA.abbr} Wins</button>
+          <button type="button" onClick={() => setWinner('teamB')} className="px-3 py-1.5 rounded-lg bg-slate-800 text-sm font-semibold">{displayMatch.teamB.abbr} Wins</button>
           <button type="button" onClick={() => setWinner(null)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-sm text-slate-500">Clear</button>
         </div>
         <div className="grid md:grid-cols-3 gap-2">
           <input
             placeholder="Top scorer name"
-            value={match.topScorer?.name ?? ''}
-            onChange={(e) => patchMatch({ topScorer: { ...match.topScorer!, name: e.target.value, score: match.topScorer?.score ?? 0, team: match.topScorer?.team ?? '' } })}
+            value={displayMatch.topScorer?.name ?? ''}
+            onChange={(e) => patchMatch({ topScorer: { ...displayMatch.topScorer!, name: e.target.value, score: displayMatch.topScorer?.score ?? 0, team: displayMatch.topScorer?.team ?? '' } })}
             className="px-2 py-1.5 rounded bg-slate-900 border border-slate-600 text-sm"
           />
           <input
             type="number"
             placeholder="Score"
-            value={match.topScorer?.score ?? 0}
-            onChange={(e) => patchMatch({ topScorer: { name: match.topScorer?.name ?? '', score: Number(e.target.value) || 0, team: match.topScorer?.team ?? '' } })}
+            value={displayMatch.topScorer?.score ?? 0}
+            onChange={(e) => patchMatch({ topScorer: { name: displayMatch.topScorer?.name ?? '', score: Number(e.target.value) || 0, team: displayMatch.topScorer?.team ?? '' } })}
             className="px-2 py-1.5 rounded bg-slate-900 border border-slate-600 text-sm tabular-nums"
           />
           <input
             placeholder="Team"
-            value={match.topScorer?.team ?? ''}
-            onChange={(e) => patchMatch({ topScorer: { name: match.topScorer?.name ?? '', score: match.topScorer?.score ?? 0, team: e.target.value } })}
+            value={displayMatch.topScorer?.team ?? ''}
+            onChange={(e) => patchMatch({ topScorer: { name: displayMatch.topScorer?.name ?? '', score: displayMatch.topScorer?.score ?? 0, team: e.target.value } })}
             className="px-2 py-1.5 rounded bg-slate-900 border border-slate-600 text-sm"
           />
         </div>
@@ -309,8 +333,8 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         <h3 className="text-sm font-bold mb-3">Player stats (live)</h3>
         {(['teamA', 'teamB'] as const).map((side) => (
           <div key={side} className="mb-4">
-            <p className="text-xs text-slate-500 uppercase mb-2">{match[side].name}</p>
-            {match[side].players.map((p) => (
+            <p className="text-xs text-slate-500 uppercase mb-2">{displayMatch[side].name}</p>
+            {displayMatch[side].players.map((p) => (
               <div key={p.id} className="flex flex-wrap gap-2 items-center py-1.5 border-b border-slate-800 last:border-0">
                 <span className="w-28 text-sm font-medium truncate">{p.name} #{p.jersey}</span>
                 <label className="text-xs flex items-center gap-1">
@@ -336,35 +360,35 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         ))}
       </div>
 
-      {sport === 'cricket' && match.cricket && (
+      {sport === 'cricket' && displayMatch.cricket && (
         <div className="glass rounded-xl p-4 border border-emerald-500/20">
           <h3 className="text-sm font-bold text-emerald-400 mb-3">Cricket Statistics (Auto-calculated)</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <span className="text-xs text-slate-500">Current Run Rate</span>
-              <p className="text-lg font-bold">{match.cricket.crr.toFixed(2)}</p>
+              <p className="text-lg font-bold">{displayMatch.cricket.crr.toFixed(2)}</p>
             </div>
             <div>
               <span className="text-xs text-slate-500">Required Run Rate</span>
-              <p className="text-lg font-bold">{match.cricket.rrr.toFixed(2)}</p>
+              <p className="text-lg font-bold">{displayMatch.cricket.rrr.toFixed(2)}</p>
             </div>
             <div>
               <span className="text-xs text-slate-500">Overs</span>
-              <p className="text-lg font-bold">{match.period}</p>
+              <p className="text-lg font-bold">{displayMatch.period}</p>
             </div>
             <div>
               <span className="text-xs text-slate-500">Target</span>
               <input
                 type="number"
-                value={(match.cricket as any)?.target || 0}
+                value={(displayMatch.cricket as any)?.target || 0}
                 onChange={(e) => {
                   const target = Number(e.target.value)
-                  const overs = parseFloat(match.period.replace(' ov', '')) || 0
+                  const overs = parseFloat(displayMatch.period.replace(' ov', '')) || 0
                   const remainingOvers = 20 - overs
-                  const chasingScore = match.teamB.score
+                  const chasingScore = displayMatch.teamB.score
                   const runsNeeded = target - chasingScore
                   const rrr = remainingOvers > 0 ? runsNeeded / remainingOvers : 0
-                  const updatedCricket = { ...match.cricket, rrr: Math.round(rrr * 100) / 100 } as any
+                  const updatedCricket = { ...displayMatch.cricket, rrr: Math.round(rrr * 100) / 100 } as any
                   patchMatch({ cricket: updatedCricket })
                 }}
                 className="w-full mt-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
@@ -376,50 +400,50 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
             <span className="text-xs text-slate-500">Bowler Stats</span>
             <div className="flex gap-2 mt-2">
               <input
-                value={match.cricket?.bowler?.name || ''}
+                value={displayMatch.cricket?.bowler?.name || ''}
                 onChange={(e) => {
-                  if (!match.cricket?.bowler) return
-                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, name: e.target.value } } })
+                  if (!displayMatch.cricket?.bowler) return
+                  patchMatch({ cricket: { ...displayMatch.cricket, bowler: { ...displayMatch.cricket.bowler, name: e.target.value } } })
                 }}
                 className="flex-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 placeholder="Bowler name"
               />
               <input
                 type="number"
-                value={match.cricket?.bowler?.overs || ''}
+                value={displayMatch.cricket?.bowler?.overs || ''}
                 onChange={(e) => {
-                  if (!match.cricket?.bowler) return
+                  if (!displayMatch.cricket?.bowler) return
                   const overs = Number(e.target.value)
-                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, overs: overs.toString() } } })
+                  patchMatch({ cricket: { ...displayMatch.cricket, bowler: { ...displayMatch.cricket.bowler, overs: overs.toString() } } })
                 }}
                 className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 title="Overs"
               />
               <input
                 type="number"
-                value={match.cricket?.bowler?.wickets || ''}
+                value={displayMatch.cricket?.bowler?.wickets || ''}
                 onChange={(e) => {
-                  if (!match.cricket?.bowler) return
-                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, wickets: Number(e.target.value) } } })
+                  if (!displayMatch.cricket?.bowler) return
+                  patchMatch({ cricket: { ...displayMatch.cricket, bowler: { ...displayMatch.cricket.bowler, wickets: Number(e.target.value) } } })
                 }}
                 className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 title="Wickets"
               />
               <input
                 type="number"
-                value={match.cricket?.bowler?.runs || ''}
+                value={displayMatch.cricket?.bowler?.runs || ''}
                 onChange={(e) => {
-                  if (!match.cricket?.bowler) return
+                  if (!displayMatch.cricket?.bowler) return
                   const runs = Number(e.target.value)
-                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, runs } } })
+                  patchMatch({ cricket: { ...displayMatch.cricket, bowler: { ...displayMatch.cricket.bowler, runs } } })
                 }}
                 className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 title="Runs given"
               />
               <span className="text-xs text-emerald-400 w-16">Eco: {(() => {
-                if (!match.cricket?.bowler) return '0.00'
-                const runs = match.cricket.bowler.runs
-                const overs = Number(match.cricket.bowler.overs)
+                if (!displayMatch.cricket?.bowler) return '0.00'
+                const runs = displayMatch.cricket.bowler.runs
+                const overs = Number(displayMatch.cricket.bowler.overs)
                 const economy = overs > 0 ? runs / overs : 0
                 return economy.toFixed(2)
               })()}</span>
