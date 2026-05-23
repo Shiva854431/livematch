@@ -20,45 +20,47 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') })
 seedIfEmpty()
 bootstrapAdminIfNeeded()
 
-// Configure Google OAuth
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5173/auth/google/callback',
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const users = storeApi.getUsers()
-        let user = users.find((u) => u.googleId === profile.id)
+// Configure Google OAuth (optional - only if env vars are set)
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5173/auth/google/callback',
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          const users = storeApi.getUsers()
+          let user = users.find((u) => u.googleId === profile.id)
 
-        if (!user) {
-          // Create new user from Google profile
-          user = {
-            id: crypto.randomUUID(),
-            googleId: profile.id,
-            fullName: profile.displayName,
-            email: profile.emails[0].value,
-            username: profile.emails[0].value.split('@')[0],
-            passwordHash: '', // No password needed for Google auth
-            theme: 'dark',
-            favoriteTeams: [],
-            favoritePlayers: [],
-            favoriteMatches: [],
-            createdAt: new Date().toISOString(),
+          if (!user) {
+            // Create new user from Google profile
+            user = {
+              id: crypto.randomUUID(),
+              googleId: profile.id,
+              fullName: profile.displayName,
+              email: profile.emails[0].value,
+              username: profile.emails[0].value.split('@')[0],
+              passwordHash: '', // No password needed for Google auth
+              theme: 'dark',
+              favoriteTeams: [],
+              favoritePlayers: [],
+              favoriteMatches: [],
+              createdAt: new Date().toISOString(),
+            }
+            users.push(user)
+            storeApi.saveUsers(users)
           }
-          users.push(user)
-          storeApi.saveUsers(users)
-        }
 
-        return done(null, user)
-      } catch (error) {
-        return done(error, null)
+          return done(null, user)
+        } catch (error) {
+          return done(error, null)
+        }
       }
-    }
+    )
   )
-)
+}
 
 passport.serializeUser((user, done) => done(null, user.id))
 passport.deserializeUser((id, done) => {
