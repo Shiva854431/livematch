@@ -127,7 +127,7 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
     const devMode = process.env.DEV_OTP === 'true'
 
     if (devMode) {
-      console.log(`[DEV OTP] user="${username}" mobile=${mobile} code=${otp}`)
+      console.log(`[DEV OTP] user="${username}" email=${email} code=${otp}`)
       return res.json({
         success: true,
         message: 'Development mode: use the OTP shown on screen',
@@ -135,22 +135,8 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
       })
     }
 
-    // Try SMS first
-    if (process.env.FAST2SMS_API_KEY) {
-      try {
-        await sendOtpSms(mobile, otp)
-        res.json({ success: true, message: 'OTP sent to your mobile' })
-      } catch (smsErr) {
-        console.error('send-otp SMS failed:', smsErr.message)
-        console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
-        res.json({
-          success: true,
-          message: 'SMS could not be sent. Use OTP shown on screen.',
-          devOtp: otp,
-        })
-      }
-    } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      // Fallback to email if SMS not configured
+    // Try email first
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       try {
         await sendOtpEmail(email, otp, fullName)
         res.json({ success: true, message: 'OTP sent to your email' })
@@ -163,11 +149,25 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
           devOtp: otp,
         })
       }
+    } else if (process.env.FAST2SMS_API_KEY) {
+      // Fallback to SMS if email not configured
+      try {
+        await sendOtpSms(mobile, otp)
+        res.json({ success: true, message: 'OTP sent to your mobile' })
+      } catch (smsErr) {
+        console.error('send-otp SMS failed:', smsErr.message)
+        console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
+        res.json({
+          success: true,
+          message: 'SMS could not be sent. Use OTP shown on screen.',
+          devOtp: otp,
+        })
+      }
     } else {
-      console.log(`[DEV OTP] No SMS or email configured. user="${username}" code=${otp}`)
+      console.log(`[DEV OTP] No email or SMS configured. user="${username}" code=${otp}`)
       res.json({
         success: true,
-        message: 'SMS/Email not configured — use OTP on screen',
+        message: 'Email/SMS not configured — use OTP on screen',
         devOtp: otp,
       })
     }
