@@ -1,4 +1,5 @@
 import { Play, Pause, Trophy } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
 import type { LiveMatch, Player, Sport, WinnerSide } from '../../types'
 import type { SportData, TeamRecord } from '../../types/sportAdmin'
 
@@ -33,6 +34,17 @@ interface LiveMatchSectionProps {
 
 export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps) {
   const match = data.currentMatch
+  const [debouncedPatch, setDebouncedPatch] = useState<Partial<LiveMatch> | null>(null)
+
+  // Debounced save for match updates to improve typing performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedPatch && match) {
+        onSave({ ...data, currentMatch: { ...match, ...debouncedPatch } })
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [debouncedPatch, match, data, onSave])
 
   const createFromTeams = async (teamAId: string, teamBId: string) => {
     const a = data.teams.find((t) => t.id === teamAId)
@@ -83,9 +95,9 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
     await onSave({ ...data, currentMatch: m })
   }
 
-  const patchMatch = async (patch: Partial<LiveMatch>) => {
+  const patchMatch = (patch: Partial<LiveMatch>) => {
     if (!match) return
-    await onSave({ ...data, currentMatch: { ...match, ...patch } })
+    setDebouncedPatch(patch)
   }
 
   const patchTeam = async (side: 'teamA' | 'teamB', patch: Partial<LiveMatch['teamA']>) => {
