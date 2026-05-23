@@ -174,7 +174,7 @@ export function TeamStandings({ isOpen, onClose, sport }: TeamStandingsProps) {
                     <td className="px-4 py-4 text-center text-slate-300">{team.netRunRate}</td>
                     <td className="px-4 py-4">
                       <div className="flex gap-1">
-                        {team.form.split('').map((result, idx) => (
+                        {team.form.map((result: 'W' | 'L', idx: number) => (
                           <span
                             key={idx}
                             className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${getFormColor(

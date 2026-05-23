@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Upload, Trash2, Play, AlertCircle } from 'lucide-react'
+import { Upload, Trash2, AlertCircle } from 'lucide-react'
 import { api } from '../../api/client'
 
 interface MatchImage {

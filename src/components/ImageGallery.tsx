@@ -34,7 +34,7 @@ export function ImageGallery({ isOpen, onClose, sport = 'cricket', matchId }: Im
     setLoading(true)
     try {
       const fetchedImages = await api.getImages(sport, matchId)
-      setImages(fetchedImages)
+      setImages(fetchedImages as MatchImage[])
     } catch (error) {
       console.error('Failed to fetch images:', error)
       // Fallback to mock data if API fails

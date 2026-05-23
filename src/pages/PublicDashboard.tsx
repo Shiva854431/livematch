@@ -23,6 +23,8 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
   const { user, isAuthenticated } = useUser()
   const { unreadCount } = useNotifications()
   const [selectedSport, setSelectedSport] = useState<Sport | 'all'>('all')
+  const [showSettings, setShowSettings] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showChat, setShowChat] = useState(false)
