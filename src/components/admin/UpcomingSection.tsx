@@ -10,7 +10,13 @@ interface UpcomingSectionProps {
 }
 
 export function UpcomingSection({ data, onSave }: UpcomingSectionProps) {
+  const [localUpcoming, setLocalUpcoming] = useState(data.upcomingMatches)
   const [debouncedUpdate, setDebouncedUpdate] = useState<{ id: string; patch: Partial<UpcomingMatchRecord> } | null>(null)
+
+  // Sync local state when data changes
+  useEffect(() => {
+    setLocalUpcoming(data.upcomingMatches)
+  }, [data])
 
   // Debounced save to reduce "saving" flashes while typing
   useEffect(() => {
@@ -43,6 +49,9 @@ export function UpcomingSection({ data, onSave }: UpcomingSectionProps) {
   }
 
   const update = (id: string, patch: Partial<UpcomingMatchRecord>) => {
+    // Update local state immediately for responsive typing
+    setLocalUpcoming(prev => prev.map(m => m.id === id ? { ...m, ...patch } : m))
+    // Trigger debounced save
     setDebouncedUpdate({ id, patch })
   }
 
@@ -64,11 +73,11 @@ export function UpcomingSection({ data, onSave }: UpcomingSectionProps) {
         </button>
       </div>
 
-      {data.upcomingMatches.length === 0 ? (
+      {localUpcoming.length === 0 ? (
         <p className="text-sm text-slate-500">Add at least 2 teams, then create upcoming fixtures.</p>
       ) : (
         <div className="space-y-3">
-          {data.upcomingMatches.map((m) => (
+          {localUpcoming.map((m) => (
             <div key={m.id} className="glass rounded-xl p-4 grid md:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] uppercase text-slate-500">Team A</label>

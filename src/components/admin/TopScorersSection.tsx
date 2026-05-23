@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { SportData } from '../../types/sportAdmin'
 
 interface TopScorersSectionProps {
@@ -6,6 +7,45 @@ interface TopScorersSectionProps {
 }
 
 export function TopScorersSection({ data, onSave }: TopScorersSectionProps) {
+  const [localSeasonTop, setLocalSeasonTop] = useState(data.seasonTopScorer)
+  const [localTopScorers, setLocalTopScorers] = useState(data.topScorers)
+  const [debouncedSeasonTop, setDebouncedSeasonTop] = useState<Partial<SportData['seasonTopScorer']> | null>(null)
+  const [debouncedScorer, setDebouncedScorer] = useState<{ playerId: string; patch: Partial<SportData['topScorers'][0]> } | null>(null)
+
+  // Sync local state when data changes
+  useEffect(() => {
+    setLocalSeasonTop(data.seasonTopScorer)
+    setLocalTopScorers(data.topScorers)
+  }, [data])
+
+  // Debounced save for season top scorer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedSeasonTop) {
+        onSave({
+          ...data,
+          seasonTopScorer: { ...data.seasonTopScorer, ...debouncedSeasonTop },
+        })
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [debouncedSeasonTop, data, onSave])
+
+  // Debounced save for individual scorer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedScorer) {
+        onSave({
+          ...data,
+          topScorers: data.topScorers.map((s) =>
+            s.playerId === debouncedScorer.playerId ? { ...s, ...debouncedScorer.patch } : s,
+          ),
+        })
+      }
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [debouncedScorer, data, onSave])
+
   const syncFromPlayers = async () => {
     const scorers = data.teams.flatMap((t) =>
       t.players.map((p) => ({
@@ -27,23 +67,21 @@ export function TopScorersSection({ data, onSave }: TopScorersSectionProps) {
     })
   }
 
-  const updateSeasonTop = async (patch: Partial<SportData['seasonTopScorer']>) => {
-    await onSave({
-      ...data,
-      seasonTopScorer: { ...data.seasonTopScorer, ...patch },
-    })
+  const updateSeasonTop = (patch: Partial<SportData['seasonTopScorer']>) => {
+    // Update local state immediately for responsive typing
+    setLocalSeasonTop(prev => ({ ...prev, ...patch }))
+    // Trigger debounced save
+    setDebouncedSeasonTop(patch)
   }
 
-  const updateScorer = async (
+  const updateScorer = (
     playerId: string,
     patch: Partial<SportData['topScorers'][0]>,
   ) => {
-    await onSave({
-      ...data,
-      topScorers: data.topScorers.map((s) =>
-        s.playerId === playerId ? { ...s, ...patch } : s,
-      ),
-    })
+    // Update local state immediately for responsive typing
+    setLocalTopScorers(prev => prev.map(s => s.playerId === playerId ? { ...s, ...patch } : s))
+    // Trigger debounced save
+    setDebouncedScorer({ playerId, patch })
   }
 
   return (
@@ -64,20 +102,20 @@ export function TopScorersSection({ data, onSave }: TopScorersSectionProps) {
         <div className="grid md:grid-cols-3 gap-3">
           <input
             placeholder="Player name"
-            value={data.seasonTopScorer.name}
+            value={localSeasonTop.name}
             onChange={(e) => updateSeasonTop({ name: e.target.value })}
             className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-600 text-sm"
           />
           <input
             type="number"
             placeholder="Total stat"
-            value={data.seasonTopScorer.stat}
+            value={localSeasonTop.stat}
             onChange={(e) => updateSeasonTop({ stat: Number(e.target.value) || 0 })}
             className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-600 text-sm tabular-nums"
           />
           <input
             placeholder="Team"
-            value={data.seasonTopScorer.team}
+            value={localSeasonTop.team}
             onChange={(e) => updateSeasonTop({ team: e.target.value })}
             className="px-3 py-2 rounded-lg bg-slate-900 border border-slate-600 text-sm"
           />
@@ -95,7 +133,7 @@ export function TopScorersSection({ data, onSave }: TopScorersSectionProps) {
             </tr>
           </thead>
           <tbody>
-            {data.topScorers.map((s, i) => (
+            {localTopScorers.map((s, i) => (
               <tr key={s.playerId} className="border-t border-slate-700/40">
                 <td className="p-2">
                   <span className="text-slate-500 mr-2">#{i + 1}</span>
@@ -136,7 +174,7 @@ export function TopScorersSection({ data, onSave }: TopScorersSectionProps) {
             ))}
           </tbody>
         </table>
-        {data.topScorers.length === 0 && (
+        {localTopScorers.length === 0 && (
           <p className="p-4 text-sm text-slate-500 text-center">Sync from players or add teams first</p>
         )}
       </div>
