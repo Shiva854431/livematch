@@ -130,8 +130,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 {tab === 'upcoming' && <UpcomingSection data={data} onSave={save} />}
                 {tab === 'scorers' && <TopScorersSection data={data} onSave={save} />}
                 {tab === 'stats' && <SeasonStatsSection sport={sport} data={data} onSave={save} />}
-                {tab === 'videos' && <VideoUploadSection sport={sport} onSave={save} />}
-                {tab === 'images' && <ImageUploadSection sport={sport} onSave={save} />}
+                {tab === 'videos' && <VideoUploadSection sport={sport} onSave={async () => {}} />}
+                {tab === 'images' && <ImageUploadSection sport={sport} onSave={async () => {}} />}
               </>
             )}
           </main>

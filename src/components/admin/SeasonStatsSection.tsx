@@ -9,9 +9,8 @@ interface SeasonStatsSectionProps {
 }
 
 export function SeasonStatsSection({ sport, data, onSave }: SeasonStatsSectionProps) {
-  const updateSeasonStats = async (patch: Partial<SeasonStats>) => {
-    await onSave({ ...data, seasonStats: { ...data.seasonStats, ...patch } })
-  }
+  // TODO: Implement season stats editing UI
+  // For now, this is a read-only display
 
   return (
     <section className="space-y-4">

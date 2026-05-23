@@ -259,6 +259,64 @@ export const api = {
     request<{ success: boolean }>(`/admin/images/${imageId}`, {
       method: 'DELETE',
     }),
+
+  // User authentication
+  userMe: () =>
+    request<{ fullName: string; username: string; email: string; favorites: any; theme: string; notifications: boolean; language: string }>('/user/me'),
+
+  userLogin: (body: { username: string; password: string }) =>
+    request<{ token: string; user: any }>('/user/login', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  userRegister: (body: { username: string; password: string; email: string; fullName: string }) =>
+    request<{ token: string; user: any }>('/user/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateUserProfile: (body: { theme?: string; notifications?: boolean; language?: string }) =>
+    request<any>('/user/profile', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  addFavoriteTeam: (teamId: string) =>
+    request<any>('/user/favorites/team', {
+      method: 'POST',
+      body: JSON.stringify({ teamId }),
+    }),
+
+  removeFavoriteTeam: (teamId: string) =>
+    request<any>('/user/favorites/team', {
+      method: 'DELETE',
+      body: JSON.stringify({ teamId }),
+    }),
+
+  addFavoritePlayer: (playerId: string) =>
+    request<any>('/user/favorites/player', {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    }),
+
+  removeFavoritePlayer: (playerId: string) =>
+    request<any>('/user/favorites/player', {
+      method: 'DELETE',
+      body: JSON.stringify({ playerId }),
+    }),
+
+  addFavoriteMatch: (matchId: string) =>
+    request<any>('/user/favorites/match', {
+      method: 'POST',
+      body: JSON.stringify({ matchId }),
+    }),
+
+  removeFavoriteMatch: (matchId: string) =>
+    request<any>('/user/favorites/match', {
+      method: 'DELETE',
+      body: JSON.stringify({ matchId }),
+    }),
 }
 
 function userAuthHeaders(): HeadersInit {

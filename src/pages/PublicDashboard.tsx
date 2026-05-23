@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Search, Video, Shield, Radio, User, Settings, Info, X, Moon, Sun, MessageSquare } from 'lucide-react'
+import { Bell, Search, Video, Shield, Radio, User, Moon, Sun, MessageSquare, Settings, Info } from 'lucide-react'
 import { LeftSidebar } from '../components/LeftSidebar'
 import { LiveTicker } from '../components/LiveTicker'
 import { LiveMatchHero } from '../components/LiveMatchHero'
@@ -102,7 +102,7 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             </button>
             <button
               type="button"
-              onClick={() => isAuthenticated ? onNavigate('/user/profile') : onNavigate('/user/login')}
+              onClick={() => isAuthenticated ? window.location.href = '/user/profile' : window.location.href = '/user/login'}
               className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
             >
               <User className="h-4 w-4" />
@@ -146,7 +146,7 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             </button>
             <button
               type="button"
-              onClick={() => isAuthenticated ? onNavigate('/user/profile') : onNavigate('/user/login')}
+              onClick={() => isAuthenticated ? window.location.href = '/user/profile' : window.location.href = '/user/login'}
               className="sm:hidden h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 ring-2 ring-white/10 shadow-lg flex items-center justify-center"
             >
               <User className="h-5 w-5 text-white" />

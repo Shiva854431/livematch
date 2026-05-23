@@ -9,12 +9,12 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ onNavigate }: UserProfileProps) {
-  const { user, logout, updateProfile, addFavoriteTeam, removeFavoriteTeam, addFavoriteMatch, removeFavoriteMatch } = useUser()
+  const { user, logout, updateProfile, removeFavoriteTeam, removeFavoriteMatch } = useUser()
   const { state } = useMatches()
   const [activeTab, setActiveTab] = useState<'teams' | 'matches' | 'settings'>('teams')
 
   if (!user) {
-    onNavigate('/user/login')
+    window.location.href = '/user/login'
     return null
   }
 
