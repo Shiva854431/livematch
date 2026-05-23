@@ -14,7 +14,7 @@ interface PublicDashboardProps {
 }
 
 export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
-  const { state, activeMatch, setActiveMatchId, getMatch } = useMatches()
+  const { state, activeMatch, setActiveMatchId, getMatch, sportStore } = useMatches()
   const [selectedSport, setSelectedSport] = useState<Sport | 'all'>('all')
 
   const loadMatch = (id: string) => {
@@ -77,6 +77,23 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
           onSelectMatch={loadMatch}
           activeMatchId={state.activeMatchId}
         />
+
+        {sportStore && selectedSport !== 'all' && (
+          <div className="px-4 md:px-6 py-3 border-b border-white/[0.06] glass">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Teams</span>
+              {sportStore[selectedSport as Sport]?.teams.map((team) => (
+                <div key={team.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                  <span className="font-bold text-sm">{team.abbr}</span>
+                  <span className="text-sm text-slate-400">{team.name}</span>
+                </div>
+              ))}
+              {(!sportStore[selectedSport as Sport]?.teams || sportStore[selectedSport as Sport]?.teams.length === 0) && (
+                <span className="text-xs text-slate-600">No teams yet</span>
+              )}
+            </div>
+          </div>
+        )}
 
         <main className="flex-1 flex overflow-hidden">
           <div className="flex-1 overflow-y-auto scrollbar-thin p-4 md:p-8">
