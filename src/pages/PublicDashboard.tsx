@@ -78,17 +78,35 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
           activeMatchId={state.activeMatchId}
         />
 
-        {sportStore && selectedSport !== 'all' && (
+        {sportStore && (
           <div className="px-4 md:px-6 py-3 border-b border-white/[0.06] glass">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Teams</span>
-              {sportStore[selectedSport as Sport]?.teams.map((team) => (
-                <div key={team.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                  <span className="font-bold text-sm">{team.abbr}</span>
-                  <span className="text-sm text-slate-400">{team.name}</span>
+              {selectedSport !== 'all' ? (
+                sportStore[selectedSport as Sport]?.teams.map((team) => (
+                  <div key={team.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                    <span className="font-bold text-sm">{team.abbr}</span>
+                    <span className="text-sm text-slate-400">{team.name}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center gap-2">
+                  {Object.entries(sportStore).map(([sport, data]) => (
+                    <div key={sport} className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-emerald-400 uppercase">{sport}</span>
+                      {data?.teams?.slice(0, 3).map((team) => (
+                        <div key={team.id} className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 border border-white/10">
+                          <span className="font-bold text-xs">{team.abbr}</span>
+                        </div>
+                      ))}
+                      {data?.teams && data.teams.length > 3 && (
+                        <span className="text-xs text-slate-500">+{data.teams.length - 3}</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {(!sportStore[selectedSport as Sport]?.teams || sportStore[selectedSport as Sport]?.teams.length === 0) && (
+              )}
+              {selectedSport !== 'all' && (!sportStore[selectedSport as Sport]?.teams || sportStore[selectedSport as Sport]?.teams.length === 0) && (
                 <span className="text-xs text-slate-600">No teams yet</span>
               )}
             </div>
