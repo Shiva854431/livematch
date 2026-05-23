@@ -8,6 +8,8 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import multer from 'multer'
 import fs from 'fs'
+import passport from 'passport'
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import { storeApi } from './store.js'
 import { sendOtpEmail, sendOtpSms } from './mail.js'
 import { seedIfEmpty } from './seed.js'
@@ -17,6 +19,53 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 seedIfEmpty()
 bootstrapAdminIfNeeded()
+
+// Configure Google OAuth
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5173/auth/google/callback',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const users = storeApi.getUsers()
+        let user = users.find((u) => u.googleId === profile.id)
+
+        if (!user) {
+          // Create new user from Google profile
+          user = {
+            id: crypto.randomUUID(),
+            googleId: profile.id,
+            fullName: profile.displayName,
+            email: profile.emails[0].value,
+            username: profile.emails[0].value.split('@')[0],
+            passwordHash: '', // No password needed for Google auth
+            theme: 'dark',
+            favoriteTeams: [],
+            favoritePlayers: [],
+            favoriteMatches: [],
+            createdAt: new Date().toISOString(),
+          }
+          users.push(user)
+          storeApi.saveUsers(users)
+        }
+
+        return done(null, user)
+      } catch (error) {
+        return done(error, null)
+      }
+    }
+  )
+)
+
+passport.serializeUser((user, done) => done(null, user.id))
+passport.deserializeUser((id, done) => {
+  const users = storeApi.getUsers()
+  const user = users.find((u) => u.id === id)
+  done(null, user)
+})
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -379,6 +428,25 @@ app.get('/api/user/me', (req, res) => {
     res.status(401).json({ error: 'Invalid token' })
   }
 })
+
+// ——— Google OAuth ———
+
+app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }))
+
+app.get(
+  '/api/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/user/login?error=google_auth_failed' }),
+  (req, res) => {
+    const user = req.user
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' },
+    )
+    // Redirect to frontend with token
+    res.redirect(`/?token=${token}`)
+  }
+)
 
 // ——— Public state ———
 
