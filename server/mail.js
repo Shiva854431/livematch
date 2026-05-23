@@ -1,23 +1,18 @@
-import nodemailer from 'nodemailer'
+import sgMail from '@sendgrid/mail'
 
-export function createTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-  })
+// Initialize SendGrid
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 }
 
 export async function sendOtpEmail(to, otp, fullName) {
-  const transporter = createTransporter()
-  await transporter.sendMail({
-    from: `"Strider Live" <${process.env.EMAIL_USER}>`,
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error('SendGrid API key not configured')
+  }
+
+  await sgMail.send({
     to,
+    from: process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER,
     subject: 'Your Strider Live Admin OTP',
     html: `
       <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#0f172a;color:#f1f5f9;border-radius:12px">
