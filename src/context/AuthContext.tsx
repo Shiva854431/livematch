@@ -15,8 +15,7 @@ interface AuthContextValue {
   loading: boolean
   hasAdmin: boolean | null
   login: (username: string, password: string) => Promise<void>
-  registerSendOtp: (body: RegisterBody) => Promise<{ devOtp?: string; message?: string }>
-  registerVerify: (username: string, otp: string) => Promise<void>
+  register: (body: RegisterBody) => Promise<void>
   logout: () => void
   refreshStatus: () => Promise<void>
 }
@@ -68,12 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setHasAdmin(true)
   }, [])
 
-  const registerSendOtp = useCallback(async (body: RegisterBody) => {
-    return api.sendOtp(body)
-  }, [])
-
-  const registerVerify = useCallback(async (username: string, otp: string) => {
-    const res = await api.verifyOtp(username, otp)
+  const register = useCallback(async (body: RegisterBody) => {
+    const res = await api.register(body)
     saveSession(res)
     setAdmin(res.admin)
     setIsAdmin(true)
@@ -93,12 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       hasAdmin,
       login,
-      registerSendOtp,
-      registerVerify,
+      register,
       logout,
       refreshStatus,
     }),
-    [isAdmin, admin, loading, hasAdmin, login, registerSendOtp, registerVerify, logout, refreshStatus],
+    [isAdmin, admin, loading, hasAdmin, login, register, logout, refreshStatus],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

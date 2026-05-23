@@ -179,7 +179,7 @@ app.get('/api/auth/status', (_req, res) => {
   }
 })
 
-app.post('/api/auth/register/send-otp', async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { fullName, mobile, state, email, username, password, confirmPassword } = req.body
 
@@ -201,68 +201,18 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' })
     }
 
-    const otp = generateOtp()
-    const pending = storeApi.getPending()
-    pending[username] = {
+    const admin = {
+      id: crypto.randomUUID(),
       fullName,
       mobile,
       state,
       email,
       username,
       passwordHash: await bcrypt.hash(password, 10),
-      otp,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-    }
-    storeApi.savePending(pending)
-
-    // Try email only
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      try {
-        await sendOtpEmail(email, otp, fullName)
-        res.json({ success: true, message: 'OTP sent to your email' })
-      } catch (mailErr) {
-        console.error('send-otp email failed:', mailErr.message)
-        res.status(500).json({ error: 'Failed to send OTP to email. Please check email configuration.' })
-      }
-    } else {
-      res.status(500).json({ error: 'Email not configured. Please set EMAIL_USER and EMAIL_PASS.' })
-    }
-  } catch (err) {
-    console.error('send-otp', err)
-    res.status(500).json({ error: err.message || 'Registration failed' })
-  }
-})
-
-app.post('/api/auth/register/verify', async (req, res) => {
-  try {
-    const { username, otp } = req.body
-    const pending = storeApi.getPending()
-    const record = pending[username]
-    if (!record) return res.status(400).json({ error: 'Registration not found. Request OTP again.' })
-    if (Date.now() > record.expiresAt) {
-      delete pending[username]
-      storeApi.savePending(pending)
-      return res.status(400).json({ error: 'OTP expired' })
-    }
-    if (record.otp !== otp) {
-      return res.status(400).json({ error: 'Invalid OTP' })
-    }
-
-    const admins = storeApi.getAdmins()
-    const admin = {
-      id: crypto.randomUUID(),
-      fullName: record.fullName,
-      mobile: record.mobile,
-      state: record.state,
-      email: record.email,
-      username: record.username,
-      passwordHash: record.passwordHash,
       createdAt: new Date().toISOString(),
     }
     admins.push(admin)
     storeApi.saveAdmins(admins)
-    delete pending[username]
-    storeApi.savePending(pending)
 
     const token = jwt.sign(
       { id: admin.id, username: admin.username },
@@ -279,8 +229,8 @@ app.post('/api/auth/register/verify', async (req, res) => {
       },
     })
   } catch (err) {
-    console.error('verify', err)
-    res.status(500).json({ error: 'Verification failed' })
+    console.error('register', err)
+    res.status(500).json({ error: err.message || 'Registration failed' })
   }
 })
 

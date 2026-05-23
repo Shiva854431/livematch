@@ -26,16 +26,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export const api = {
   authStatus: () => request<{ hasAdmin: boolean }>('/auth/status'),
 
-  sendOtp: (body: RegisterBody) =>
-    request<{ success: boolean; message?: string; devOtp?: string }>('/auth/register/send-otp', {
+  register: (body: RegisterBody) =>
+    request<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(body),
-    }),
-
-  verifyOtp: (username: string, otp: string) =>
-    request<AuthResponse>('/auth/register/verify', {
-      method: 'POST',
-      body: JSON.stringify({ username, otp }),
     }),
 
   login: (username: string, password: string) =>

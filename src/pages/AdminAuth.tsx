@@ -3,7 +3,7 @@ import { Lock, Mail, Shield, User, Phone } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import type { Route } from '../hooks/useRouter'
 
-type Mode = 'login' | 'register' | 'otp'
+type Mode = 'login' | 'register'
 interface AdminAuthProps {
   onNavigate: (route: Route) => void
 }
@@ -17,7 +17,7 @@ const INDIAN_STATES = [
 ]
 
 export function AdminAuth({ onNavigate }: AdminAuthProps) {
-  const { login, registerSendOtp, registerVerify, hasAdmin, loading } = useAuth()
+  const { login, register, hasAdmin, loading } = useAuth()
   const [mode, setMode] = useState<Mode>(hasAdmin === false ? 'register' : 'login')
 
   const [fullName, setFullName] = useState('')
@@ -27,10 +27,8 @@ export function AdminAuth({ onNavigate }: AdminAuthProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [devOtpHint, setDevOtpHint] = useState('')
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
@@ -58,9 +56,8 @@ export function AdminAuth({ onNavigate }: AdminAuthProps) {
       return
     }
     setBusy(true)
-    setDevOtpHint('')
     try {
-      const result = await registerSendOtp({
+      await register({
         fullName,
         mobile,
         state,
@@ -69,27 +66,9 @@ export function AdminAuth({ onNavigate }: AdminAuthProps) {
         password,
         confirmPassword,
       })
-      if (result.devOtp) {
-        setDevOtpHint(result.devOtp)
-        setOtp(result.devOtp)
-      }
-      setMode('otp')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleVerifyOtp = async (e: FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setBusy(true)
-    try {
-      await registerVerify(username, otp)
       onNavigate('/admin')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid OTP')
+      setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {
       setBusy(false)
     }
@@ -113,12 +92,12 @@ export function AdminAuth({ onNavigate }: AdminAuthProps) {
           <div>
             <h1 className="font-display text-xl font-bold uppercase tracking-wide">Strider Admin</h1>
             <p className="text-sm text-slate-500">
-              {hasAdmin === false ? 'First-time setup with email OTP' : 'Sign in or register'}
+              {hasAdmin === false ? 'First-time setup' : 'Sign in or register'}
             </p>
           </div>
         </div>
 
-        {hasAdmin !== false && mode !== 'otp' && (
+        {hasAdmin !== false && (
           <div className="flex gap-2 mb-6 p-1 rounded-xl bg-slate-800/60">
             <TabBtn active={mode === 'login'} onClick={() => { setMode('login'); setError('') }}>
               Sign In
@@ -161,7 +140,7 @@ export function AdminAuth({ onNavigate }: AdminAuthProps) {
                 ))}
               </select>
             </div>
-            <Field label="Email (for OTP)" value={email} onChange={setEmail} icon={Mail} type="email" required />
+            <Field label="Email" value={email} onChange={setEmail} icon={Mail} type="email" required />
             <Field label="Username" value={username} onChange={setUsername} icon={User} required />
             <Field label="Password" value={password} onChange={setPassword} type="password" icon={Lock} required />
             <Field
@@ -173,42 +152,7 @@ export function AdminAuth({ onNavigate }: AdminAuthProps) {
               required
             />
             {error && <Err msg={error} />}
-            <Submit busy={busy} label="Send OTP to Email" />
-          </form>
-        )}
-
-        {mode === 'otp' && (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            {devOtpHint && (
-              <div className="rounded-xl bg-amber-500/15 border border-amber-500/40 p-4 text-center">
-                <p className="text-xs text-amber-300 uppercase font-bold mb-1">Your OTP (dev mode)</p>
-                <p className="text-3xl font-black tracking-[0.4em] text-amber-400 tabular-nums">{devOtpHint}</p>
-              </div>
-            )}
-            <p className="text-sm text-slate-400">
-              {devOtpHint
-                ? 'Enter the code above (email not sent — fix Gmail in .env for production)'
-                : <>Enter the 6-digit code sent to <span className="text-emerald-400">{email}</span></>}
-            </p>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-              className="w-full text-center text-3xl font-black tracking-[0.5em] py-4 rounded-xl bg-slate-800 border border-slate-600 tabular-nums"
-              placeholder="000000"
-              required
-            />
-            {error && <Err msg={error} />}
-            <Submit busy={busy} label="Verify & Create Account" />
-            <button
-              type="button"
-              onClick={() => setMode('register')}
-              className="w-full text-sm text-slate-500 hover:text-slate-300"
-            >
-              ← Back to registration
-            </button>
+            <Submit busy={busy} label="Create Account" />
           </form>
         )}
 
