@@ -17,7 +17,7 @@ interface StandingTeam {
   lost: number
   points: number
   netRunRate: string
-  form: 'W' | 'L' | 'W' | 'W' | 'L'
+  form: Array<'W' | 'L'>
   trend: 'up' | 'down' | 'same'
 }
 
@@ -26,14 +26,14 @@ export function TeamStandings({ isOpen, onClose, sport }: TeamStandingsProps) {
 
   // Mock data - in production, this would come from the API
   const standings: StandingTeam[] = [
-    { rank: 1, name: 'Mumbai Indians', abbr: 'MI', played: 12, won: 10, lost: 2, points: 20, netRunRate: '+1.245', form: 'WWWWW', trend: 'up' },
-    { rank: 2, name: 'Chennai Super Kings', abbr: 'CSK', played: 12, won: 9, lost: 3, points: 18, netRunRate: '+0.987', form: 'WWWLW', trend: 'up' },
-    { rank: 3, name: 'Royal Challengers', abbr: 'RCB', played: 12, won: 8, lost: 4, points: 16, netRunRate: '+0.654', form: 'LWWWW', trend: 'same' },
-    { rank: 4, name: 'Kolkata Knight Riders', abbr: 'KKR', played: 12, won: 7, lost: 5, points: 14, netRunRate: '+0.432', form: 'WWLWW', trend: 'up' },
-    { rank: 5, name: 'Delhi Capitals', abbr: 'DC', played: 12, won: 6, lost: 6, points: 12, netRunRate: '-0.123', form: 'LWLWW', trend: 'down' },
-    { rank: 6, name: 'Rajasthan Royals', abbr: 'RR', played: 12, won: 6, lost: 6, points: 12, netRunRate: '-0.234', form: 'WLLWW', trend: 'same' },
-    { rank: 7, name: 'Sunrisers Hyderabad', abbr: 'SRH', played: 12, won: 5, lost: 7, points: 10, netRunRate: '-0.456', form: 'LLWLL', trend: 'down' },
-    { rank: 8, name: 'Punjab Kings', abbr: 'PBKS', played: 12, won: 4, lost: 8, points: 8, netRunRate: '-0.789', form: 'LLLLW', trend: 'down' },
+    { rank: 1, name: 'Mumbai Indians', abbr: 'MI', played: 12, won: 10, lost: 2, points: 20, netRunRate: '+1.245', form: ['W', 'W', 'W', 'W', 'W'], trend: 'up' },
+    { rank: 2, name: 'Chennai Super Kings', abbr: 'CSK', played: 12, won: 9, lost: 3, points: 18, netRunRate: '+0.987', form: ['W', 'W', 'W', 'L', 'W'], trend: 'up' },
+    { rank: 3, name: 'Royal Challengers', abbr: 'RCB', played: 12, won: 8, lost: 4, points: 16, netRunRate: '+0.654', form: ['L', 'W', 'W', 'W', 'W'], trend: 'same' },
+    { rank: 4, name: 'Kolkata Knight Riders', abbr: 'KKR', played: 12, won: 7, lost: 5, points: 14, netRunRate: '+0.432', form: ['W', 'W', 'L', 'W', 'W'], trend: 'up' },
+    { rank: 5, name: 'Delhi Capitals', abbr: 'DC', played: 12, won: 6, lost: 6, points: 12, netRunRate: '-0.123', form: ['L', 'W', 'L', 'W', 'W'], trend: 'down' },
+    { rank: 6, name: 'Rajasthan Royals', abbr: 'RR', played: 12, won: 6, lost: 6, points: 12, netRunRate: '-0.234', form: ['W', 'L', 'L', 'W', 'W'], trend: 'same' },
+    { rank: 7, name: 'Sunrisers Hyderabad', abbr: 'SRH', played: 12, won: 5, lost: 7, points: 10, netRunRate: '-0.456', form: ['L', 'L', 'W', 'L', 'L'], trend: 'down' },
+    { rank: 8, name: 'Punjab Kings', abbr: 'PBKS', played: 12, won: 4, lost: 8, points: 8, netRunRate: '-0.789', form: ['L', 'L', 'L', 'L', 'W'], trend: 'down' },
   ]
 
   const sortedStandings = [...standings].sort((a, b) => {

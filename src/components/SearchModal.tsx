@@ -10,7 +10,7 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ isOpen, onClose, onSelectMatch }: SearchModalProps) {
-  const { state, sportStore } = useMatches()
+  const { state } = useMatches()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<{
     teams: string[]

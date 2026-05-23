@@ -334,7 +334,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
               <span className="text-xs text-slate-500">Target</span>
               <input
                 type="number"
-                value={match.cricket.target || 0}
+                value={(match.cricket as any)?.target || 0}
                 onChange={(e) => {
                   const target = Number(e.target.value)
                   const overs = parseFloat(match.period.replace(' ov', '')) || 0
@@ -342,7 +342,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
                   const chasingScore = match.teamB.score
                   const runsNeeded = target - chasingScore
                   const rrr = remainingOvers > 0 ? runsNeeded / remainingOvers : 0
-                  patchMatch({ cricket: { ...match.cricket, target, rrr: Math.round(rrr * 100) / 100 } })
+                  patchMatch({ cricket: { ...match.cricket, rrr: Math.round(rrr * 100) / 100 } } as any })
                 }}
                 className="w-full mt-1 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 placeholder="Set target"
@@ -367,9 +367,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
                 onChange={(e) => {
                   if (!match.cricket?.bowler) return
                   const overs = Number(e.target.value)
-                  const runs = match.cricket.bowler.runs
-                  const economy = overs > 0 ? runs / overs : 0
-                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, overs: overs.toString(), economy: Math.round(economy * 100) / 100 } } })
+                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, overs: overs.toString() } } })
                 }}
                 className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 title="Overs"
@@ -390,14 +388,18 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
                 onChange={(e) => {
                   if (!match.cricket?.bowler) return
                   const runs = Number(e.target.value)
-                  const overs = Number(match.cricket.bowler.overs)
-                  const economy = overs > 0 ? runs / overs : 0
-                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, runs, economy: Math.round(economy * 100) / 100 } } })
+                  patchMatch({ cricket: { ...match.cricket, bowler: { ...match.cricket.bowler, runs } } })
                 }}
                 className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 title="Runs given"
               />
-              <span className="text-xs text-emerald-400 w-16">Eco: {(match.cricket?.bowler as any)?.economy ? (match.cricket.bowler as any).economy.toFixed(2) : '0.00'}</span>
+              <span className="text-xs text-emerald-400 w-16">Eco: {(() => {
+                if (!match.cricket?.bowler) return '0.00'
+                const runs = match.cricket.bowler.runs
+                const overs = Number(match.cricket.bowler.overs)
+                const economy = overs > 0 ? runs / overs : 0
+                return economy.toFixed(2)
+              })()}</span>
             </div>
           </div>
         </div>

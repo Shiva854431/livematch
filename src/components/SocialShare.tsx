@@ -64,7 +64,7 @@ export function SocialShare({ isOpen, onClose, title, url }: SocialShareProps) {
           <p className="text-sm text-slate-400 mb-6 text-center">{title}</p>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {navigator.share && (
+            {typeof navigator.share === 'function' && (
               <button
                 type="button"
                 onClick={() => handleShare('native')}

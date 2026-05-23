@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Calendar, Clock, MapPin, Plus, Download } from 'lucide-react'
+import { X, Calendar, Clock, MapPin, Download } from 'lucide-react'
 
 interface CalendarEvent {
   id: string

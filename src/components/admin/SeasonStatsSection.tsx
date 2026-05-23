@@ -1,6 +1,6 @@
 import { Trophy, TrendingUp, Target, Zap, Award } from 'lucide-react'
 import type { Sport } from '../../types'
-import type { SportData, SeasonStats } from '../../types/sportAdmin'
+import type { SportData } from '../../types/sportAdmin'
 
 interface SeasonStatsSectionProps {
   sport: Sport
@@ -8,7 +8,7 @@ interface SeasonStatsSectionProps {
   onSave: (next: SportData) => Promise<void>
 }
 
-export function SeasonStatsSection({ sport, data, onSave }: SeasonStatsSectionProps) {
+export function SeasonStatsSection({ sport, data }: SeasonStatsSectionProps) {
   // TODO: Implement season stats editing UI
   // For now, this is a read-only display
 

@@ -22,11 +22,10 @@ interface VideoHighlightsProps {
   matchId?: string
 }
 
-export function VideoHighlights({ isOpen, onClose, sport = 'cricket', matchId }: VideoHighlightsProps) {
+export function VideoHighlights({ isOpen, onClose, sport = 'cricket', matchId: _matchId }: VideoHighlightsProps) {
   const [selectedVideo, setSelectedVideo] = useState<VideoHighlight | null>(null)
   const [category, setCategory] = useState<'all' | 'goal' | 'wicket' | 'amazing' | 'interview' | 'analysis'>('all')
   const [highlights, setHighlights] = useState<VideoHighlight[]>([])
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -35,11 +34,10 @@ export function VideoHighlights({ isOpen, onClose, sport = 'cricket', matchId }:
   }, [isOpen, sport])
 
   const fetchVideos = async () => {
-    setLoading(true)
     try {
       const videos = await api.getVideos(sport)
       // Transform API response to match our interface
-      const transformedVideos: VideoHighlight[] = videos.map(v => ({
+      const transformedVideos: VideoHighlight[] = videos.map((v: any) => ({
         id: v.id,
         title: v.title,
         description: v.description,
@@ -55,8 +53,6 @@ export function VideoHighlights({ isOpen, onClose, sport = 'cricket', matchId }:
       console.error('Failed to fetch videos:', error)
       // Fallback to mock data if API fails
       setHighlights(getMockHighlights())
-    } finally {
-      setLoading(false)
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Trophy, CheckCircle, XCircle, Clock, Users } from 'lucide-react'
+import { X, Trophy, CheckCircle, Clock, Users } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -35,7 +35,7 @@ interface PollsAndQuizzesProps {
 
 export function PollsAndQuizzes({ isOpen, onClose }: PollsAndQuizzesProps) {
   const [activeTab, setActiveTab] = useState<'polls' | 'quizzes'>('polls')
-  const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null)
+  // const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null) // TODO: Implement poll selection
 
   // Mock data - in production, this would come from the API
   const polls: Poll[] = [

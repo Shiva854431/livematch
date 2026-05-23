@@ -57,95 +57,6 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-}
-
-export interface RegisterBody {
-  fullName: string
-  mobile: string
-  state: string
-  email: string
-  username: string
-  password: string
-  confirmPassword: string
-}
-
-export interface AuthResponse {
-  token: string
-  admin: AdminProfile
-}
-
-export interface AdminProfile {
-  fullName: string
-  username: string
-  email: string
-  state: string
-  mobile?: string
-}
-
-export const TOKEN_KEY = 'strider-admin-token'
-export const USER_TOKEN_KEY = 'strider-user-token'
-
-export interface UserRegisterBody {
-  username: string
-  email: string
-  password: string
-  fullName: string
-}
-
-export interface UserAuthResponse {
-  token: string
-  user: UserProfile
-}
-
-export interface UserProfile {
-  id: string
-  username: string
-  email: string
-  fullName: string
-  avatar?: string
-  favoriteTeams: string[]
-  favoritePlayers: string[]
-  favoriteMatches: string[]
-  notificationsEnabled: boolean
-  theme: 'dark' | 'light'
-  language: string
-  createdAt: string
-}
-
-export const api = {
-  authStatus: () => request<{ hasAdmin: boolean }>('/auth/status'),
-
-  sendOtp: (body: RegisterBody) =>
-    request<{ success: boolean; message?: string; devOtp?: string }>('/auth/register/send-otp', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
-
-  verifyOtp: (username: string, otp: string) =>
-    request<AuthResponse>('/auth/register/verify', {
-      method: 'POST',
-      body: JSON.stringify({ username, otp }),
-    }),
-
-  login: (username: string, password: string) =>
-    request<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    }),
-
-  me: () =>
-    request<AdminProfile>('/auth/me', { headers: authHeaders() }),
-
-  getPublicState: () => request<import('../types/sportAdmin').SportStore>('/public/state'),
-
-  getSport: (sport: string) =>
-    request<import('../types/sportAdmin').SportData>(`/admin/sports/${sport}`),
-
-  saveSport: (sport: string, data: import('../types/sportAdmin').SportData) =>
-    request<import('../types/sportAdmin').SportData>(`/admin/sports/${sport}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
 
   // User authentication
   userRegister: (body: UserRegisterBody) =>
@@ -259,64 +170,59 @@ export const api = {
     request<{ success: boolean }>(`/admin/images/${imageId}`, {
       method: 'DELETE',
     }),
+}
 
-  // User authentication
-  userMe: () =>
-    request<{ fullName: string; username: string; email: string; favorites: any; theme: string; notifications: boolean; language: string }>('/user/me'),
+export interface RegisterBody {
+  fullName: string
+  mobile: string
+  state: string
+  email: string
+  username: string
+  password: string
+  confirmPassword: string
+}
 
-  userLogin: (body: { username: string; password: string }) =>
-    request<{ token: string; user: any }>('/user/login', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
+export interface AuthResponse {
+  token: string
+  admin: AdminProfile
+}
 
-  userRegister: (body: { username: string; password: string; email: string; fullName: string }) =>
-    request<{ token: string; user: any }>('/user/register', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
+export interface AdminProfile {
+  fullName: string
+  username: string
+  email: string
+  state: string
+  mobile?: string
+}
 
-  updateUserProfile: (body: { theme?: string; notifications?: boolean; language?: string }) =>
-    request<any>('/user/profile', {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    }),
+export const TOKEN_KEY = 'strider-admin-token'
+export const USER_TOKEN_KEY = 'strider-user-token'
 
-  addFavoriteTeam: (teamId: string) =>
-    request<any>('/user/favorites/team', {
-      method: 'POST',
-      body: JSON.stringify({ teamId }),
-    }),
+export interface UserRegisterBody {
+  username: string
+  email: string
+  password: string
+  fullName: string
+}
 
-  removeFavoriteTeam: (teamId: string) =>
-    request<any>('/user/favorites/team', {
-      method: 'DELETE',
-      body: JSON.stringify({ teamId }),
-    }),
+export interface UserAuthResponse {
+  token: string
+  user: UserProfile
+}
 
-  addFavoritePlayer: (playerId: string) =>
-    request<any>('/user/favorites/player', {
-      method: 'POST',
-      body: JSON.stringify({ playerId }),
-    }),
-
-  removeFavoritePlayer: (playerId: string) =>
-    request<any>('/user/favorites/player', {
-      method: 'DELETE',
-      body: JSON.stringify({ playerId }),
-    }),
-
-  addFavoriteMatch: (matchId: string) =>
-    request<any>('/user/favorites/match', {
-      method: 'POST',
-      body: JSON.stringify({ matchId }),
-    }),
-
-  removeFavoriteMatch: (matchId: string) =>
-    request<any>('/user/favorites/match', {
-      method: 'DELETE',
-      body: JSON.stringify({ matchId }),
-    }),
+export interface UserProfile {
+  id: string
+  username: string
+  email: string
+  fullName: string
+  avatar?: string
+  favoriteTeams: string[]
+  favoritePlayers: string[]
+  favoriteMatches: string[]
+  notificationsEnabled: boolean
+  theme: 'dark' | 'light'
+  language: string
+  createdAt: string
 }
 
 function userAuthHeaders(): HeadersInit {

@@ -15,7 +15,7 @@ interface LiveChatProps {
   onClose: () => void
 }
 
-export function LiveChat({ matchId, isOpen, onClose }: LiveChatProps) {
+export function LiveChat({ matchId: _matchId, isOpen, onClose }: LiveChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Trophy, TrendingUp, Users, Star, Plus, Minus, Lock } from 'lucide-react'
+import { X, Trophy, TrendingUp, Users, Star, Minus, Lock } from 'lucide-react'
 
 interface FantasyLeagueProps {
   isOpen: boolean
