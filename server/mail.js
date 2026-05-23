@@ -10,20 +10,29 @@ export async function sendOtpEmail(to, otp, fullName) {
     throw new Error('SendGrid API key not configured')
   }
 
-  await sgMail.send({
-    to,
-    from: process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER,
-    subject: 'Your Strider Live Admin OTP',
-    html: `
-      <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#0f172a;color:#f1f5f9;border-radius:12px">
-        <h2 style="color:#22c55e;margin:0 0 8px">Strider Live Admin</h2>
-        <p>Hi ${fullName},</p>
-        <p>Your one-time verification code is:</p>
-        <p style="font-size:32px;font-weight:800;letter-spacing:8px;color:#22c55e;margin:16px 0">${otp}</p>
-        <p style="color:#94a3b8;font-size:13px">Valid for 10 minutes. Do not share this code.</p>
-      </div>
-    `,
-  })
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER
+  console.log(`Sending OTP email to: ${to} from: ${fromEmail}`)
+
+  try {
+    await sgMail.send({
+      to,
+      from: fromEmail,
+      subject: 'Your Strider Live Admin OTP',
+      html: `
+        <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#0f172a;color:#f1f5f9;border-radius:12px">
+          <h2 style="color:#22c55e;margin:0 0 8px">Strider Live Admin</h2>
+          <p>Hi ${fullName},</p>
+          <p>Your one-time verification code is:</p>
+          <p style="font-size:32px;font-weight:800;letter-spacing:8px;color:#22c55e;margin:16px 0">${otp}</p>
+          <p style="color:#94a3b8;font-size:13px">Valid for 10 minutes. Do not share this code.</p>
+        </div>
+      `,
+    })
+    console.log(`OTP email sent successfully to: ${to}`)
+  } catch (error) {
+    console.error(`Failed to send OTP email to ${to}:`, error.response?.body || error.message)
+    throw error
+  }
 }
 
 export async function sendOtpSms(mobile, otp) {
