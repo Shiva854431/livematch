@@ -152,7 +152,7 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
       console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
       res.json({
         success: true,
-        message: 'Email could not be sent (check Gmail app password). Use OTP on screen.',
+        message: 'Email could not be sent. Use OTP shown on screen.',
         devOtp: otp,
       })
     }
