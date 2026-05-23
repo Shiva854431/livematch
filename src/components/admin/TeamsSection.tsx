@@ -119,6 +119,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
               <tr key={team.id} className="border-t border-slate-700/40">
                 <td className="p-2">
                   <input
+                    autoComplete="off"
                     value={team.name}
                     onChange={(e) => updateTeam(team.id, { name: e.target.value })}
                     className="w-full px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
@@ -126,6 +127,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                 </td>
                 <td className="p-2">
                   <input
+                    autoComplete="off"
                     value={team.abbr}
                     onChange={(e) => updateTeam(team.id, { abbr: e.target.value.toUpperCase().slice(0, 4) })}
                     className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm font-bold"
@@ -133,6 +135,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                 </td>
                 <td className="p-2">
                   <input
+                    autoComplete="off"
                     value={team.state}
                     onChange={(e) => updateTeam(team.id, { state: e.target.value })}
                     className="w-full px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
@@ -140,6 +143,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                 </td>
                 <td className="p-2">
                   <input
+                    autoComplete="off"
                     type="number"
                     value={team.seasonPoints}
                     onChange={(e) => updateTeam(team.id, { seasonPoints: Number(e.target.value) || 0 })}
@@ -148,6 +152,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                 </td>
                 <td className="p-2">
                   <input
+                    autoComplete="off"
                     type="number"
                     value={team.seasonWins}
                     onChange={(e) => updateTeam(team.id, { seasonWins: Number(e.target.value) || 0 })}
@@ -185,12 +190,14 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                 className="grid grid-cols-2 md:grid-cols-6 gap-2 items-center p-2 rounded-lg bg-slate-800/40"
               >
                 <input
+                  autoComplete="off"
                   placeholder="Name"
                   value={p.name}
                   onChange={(e) => updatePlayer(team.id, p.id, { name: e.target.value })}
                   className="px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm col-span-2"
                 />
                 <input
+                  autoComplete="off"
                   type="number"
                   placeholder="#"
                   value={p.jersey}
@@ -198,12 +205,14 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                   className="px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 />
                 <input
+                  autoComplete="off"
                   placeholder="State"
                   value={p.state}
                   onChange={(e) => updatePlayer(team.id, p.id, { state: e.target.value })}
                   className="px-2 py-1 rounded bg-slate-900 border border-slate-600 text-sm"
                 />
                 <input
+                  autoComplete="off"
                   type="number"
                   placeholder="Match"
                   title="Match score"
@@ -213,6 +222,7 @@ export function TeamsSection({ sport, data, onSave }: TeamsSectionProps) {
                 />
                 <div className="flex items-center gap-1">
                   <input
+                    autoComplete="off"
                     type="number"
                     placeholder="Season"
                     title="Season total"
