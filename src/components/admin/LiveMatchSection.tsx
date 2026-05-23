@@ -35,6 +35,7 @@ interface LiveMatchSectionProps {
 export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps) {
   const match = data.currentMatch
   const [debouncedPatch, setDebouncedPatch] = useState<Partial<LiveMatch> | null>(null)
+  const [debouncedData, setDebouncedData] = useState<SportData | null>(null)
 
   // Debounced save for match updates to improve typing performance
   useEffect(() => {
@@ -45,6 +46,16 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
     }, 500)
     return () => clearTimeout(timer)
   }, [debouncedPatch, match, data, onSave])
+
+  // Debounced save for general data updates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedData) {
+        onSave(debouncedData)
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [debouncedData, onSave])
 
   const createFromTeams = async (teamAId: string, teamBId: string) => {
     const a = data.teams.find((t) => t.id === teamAId)
@@ -100,31 +111,31 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
     setDebouncedPatch(patch)
   }
 
-  const patchTeam = async (side: 'teamA' | 'teamB', patch: Partial<LiveMatch['teamA']>) => {
+  const patchTeam = (side: 'teamA' | 'teamB', patch: Partial<LiveMatch['teamA']>) => {
     if (!match) return
-    await onSave({ ...data, currentMatch: { ...match, [side]: { ...match[side], ...patch } } })
+    setDebouncedData({ ...data, currentMatch: { ...match, [side]: { ...match[side], ...patch } } })
   }
 
-  const setScore = async (side: 'teamA' | 'teamB', score: number) => {
-    await patchTeam(side, { score: Math.max(0, score) })
-    
+  const setScore = (side: 'teamA' | 'teamB', score: number) => {
+    patchTeam(side, { score: Math.max(0, score) })
+
     // Auto-calculate cricket statistics when score changes
     if (sport === 'cricket' && match?.cricket) {
       const overs = parseFloat(match.period.replace(' ov', '')) || 0
       const teamScore = Math.max(0, score)
       const crr = overs > 0 ? teamScore / overs : 0
-      await patchMatch({ cricket: { ...match.cricket, crr: Math.round(crr * 100) / 100 } })
+      patchMatch({ cricket: { ...match.cricket, crr: Math.round(crr * 100) / 100 } })
     }
   }
 
-  const setPlayer = async (
+  const setPlayer = (
     side: 'teamA' | 'teamB',
     playerId: string,
     patch: Partial<Player>,
   ) => {
     if (!match) return
     const updatedPlayers = match[side].players.map((p) => (p.id === playerId ? { ...p, ...patch } : p))
-    
+
     // Auto-calculate cricket statistics
     if (sport === 'cricket' && match.cricket) {
       const updatedPlayer = updatedPlayers.find(p => p.id === playerId)
@@ -134,8 +145,8 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
         updatedPlayer.strikeRate = Math.round(strikeRate * 100) / 100
       }
     }
-    
-    await onSave({
+
+    setDebouncedData({
       ...data,
       currentMatch: {
         ...match,
