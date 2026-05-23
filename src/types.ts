@@ -22,6 +22,7 @@ export interface Player {
   isActive: boolean
   runs?: number
   balls?: number
+  strikeRate?: number
   wickets?: number
   raidPoints?: number
   tacklePoints?: number
@@ -42,9 +43,10 @@ export interface CricketTelemetry {
   overs: string
   crr: number
   rrr: number
+  target: number
   striker: { name: string; runs: number; balls: number }
   nonStriker: { name: string; runs: number; balls: number }
-  bowler: { name: string; overs: string; wickets: number; runs: number }
+  bowler: { name: string; overs: string; wickets: number; runs: number; economy: number }
 }
 
 export interface KabaddiTelemetry {
