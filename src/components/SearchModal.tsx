@@ -10,28 +10,40 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ isOpen, onClose, onSelectMatch }: SearchModalProps) {
-  const { state } = useMatches()
+  const { state, sportStore } = useMatches()
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [results, setResults] = useState<{
     teams: string[]
     matches: Array<{ id: string; teamA: string; teamB: string; sport: Sport; period: string }>
     tournaments: string[]
   }>({ teams: [], matches: [], tournaments: [] })
 
+  // Debounce search query
   useEffect(() => {
-    if (!query.trim()) {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
       setResults({ teams: [], matches: [], tournaments: [] })
       return
     }
 
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = debouncedQuery.toLowerCase()
 
-    // Search teams
+    // Search teams - only from admin-added teams in sportStore
     const allTeams = new Set<string>()
-    Object.values(state.matches).forEach(match => {
-      allTeams.add(match.teamA.name)
-      allTeams.add(match.teamB.name)
-    })
+    if (sportStore) {
+      Object.values(sportStore).forEach(sportData => {
+        sportData.teams.forEach(team => {
+          allTeams.add(team.name)
+        })
+      })
+    }
     const filteredTeams = Array.from(allTeams).filter(team =>
       team.toLowerCase().includes(lowerQuery)
     )
