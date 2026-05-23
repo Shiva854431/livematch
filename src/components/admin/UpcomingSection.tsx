@@ -1,4 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import type { SportData, UpcomingMatchRecord } from '../../types/sportAdmin'
 
 const uid = () => crypto.randomUUID()
@@ -9,6 +10,21 @@ interface UpcomingSectionProps {
 }
 
 export function UpcomingSection({ data, onSave }: UpcomingSectionProps) {
+  const [debouncedUpdate, setDebouncedUpdate] = useState<{ id: string; patch: Partial<UpcomingMatchRecord> } | null>(null)
+
+  // Debounced save to reduce "saving" flashes while typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedUpdate) {
+        onSave({
+          ...data,
+          upcomingMatches: data.upcomingMatches.map((m) => (m.id === debouncedUpdate.id ? { ...m, ...debouncedUpdate.patch } : m)),
+        })
+      }
+    }, 1500) // 1.5s debounce to reduce frequent saves
+    return () => clearTimeout(timer)
+  }, [debouncedUpdate, data, onSave])
+
   const add = async () => {
     const t1 = data.teams[0]
     const t2 = data.teams[1]
@@ -26,11 +42,8 @@ export function UpcomingSection({ data, onSave }: UpcomingSectionProps) {
     await onSave({ ...data, upcomingMatches: [...data.upcomingMatches, m] })
   }
 
-  const update = async (id: string, patch: Partial<UpcomingMatchRecord>) => {
-    await onSave({
-      ...data,
-      upcomingMatches: data.upcomingMatches.map((m) => (m.id === id ? { ...m, ...patch } : m)),
-    })
+  const update = (id: string, patch: Partial<UpcomingMatchRecord>) => {
+    setDebouncedUpdate({ id, patch })
   }
 
   const remove = async (id: string) => {

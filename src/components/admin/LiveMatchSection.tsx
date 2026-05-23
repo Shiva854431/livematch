@@ -43,7 +43,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
       if (debouncedPatch && match) {
         onSave({ ...data, currentMatch: { ...match, ...debouncedPatch } })
       }
-    }, 500)
+    }, 2000) // Increased from 500ms to 2000ms to reduce "saving" flashes
     return () => clearTimeout(timer)
   }, [debouncedPatch, match, data, onSave])
 
@@ -53,7 +53,7 @@ export function LiveMatchSection({ sport, data, onSave }: LiveMatchSectionProps)
       if (debouncedData) {
         onSave(debouncedData)
       }
-    }, 500)
+    }, 2000) // Increased from 500ms to 2000ms to reduce "saving" flashes
     return () => clearTimeout(timer)
   }, [debouncedData, onSave])
 
