@@ -17,7 +17,7 @@ import { seedIfEmpty } from './seed.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
-seedIfEmpty()
+// seedIfEmpty() // Disabled - remove dummy data, use only admin data
 bootstrapAdminIfNeeded()
 
 // Configure Google OAuth (optional - only if env vars are set)

@@ -83,7 +83,7 @@ export function MatchProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refresh()
-    const t = setInterval(refresh, 3000)
+    const t = setInterval(refresh, 30000) // Increased from 3s to 30s to reduce typing lag
     return () => clearInterval(t)
   }, [refresh])
 

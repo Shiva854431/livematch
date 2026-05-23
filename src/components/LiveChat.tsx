@@ -62,7 +62,7 @@ export function LiveChat({ matchId: _matchId, isOpen, onClose }: LiveChatProps) 
 
       // Simulate online count fluctuation
       setOnlineCount(prev => prev + Math.floor(Math.random() * 5) - 2)
-    }, 5000)
+    }, 15000) // Increased from 5s to 15s to reduce typing lag
 
     return () => clearInterval(interval)
   }, [isOpen])
