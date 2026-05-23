@@ -18,3 +18,5 @@ services:
         value: admin
       - key: BOOTSTRAP_ADMIN_PASS
         value: admin123
+      - key: FAST2SMS_API_KEY
+        value: your_fast2sms_api_key_here

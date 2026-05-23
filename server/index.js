@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { storeApi } from './store.js'
-import { sendOtpEmail } from './mail.js'
+import { sendOtpEmail, sendOtpSms } from './mail.js'
 import { seedIfEmpty } from './seed.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -127,7 +127,7 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
     const devMode = process.env.DEV_OTP === 'true'
 
     if (devMode) {
-      console.log(`[DEV OTP] user="${username}" email=${email} code=${otp}`)
+      console.log(`[DEV OTP] user="${username}" mobile=${mobile} code=${otp}`)
       return res.json({
         success: true,
         message: 'Development mode: use the OTP shown on screen',
@@ -135,24 +135,39 @@ app.post('/api/auth/register/send-otp', async (req, res) => {
       })
     }
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.log(`[DEV OTP] Email not configured. user="${username}" code=${otp}`)
-      return res.json({
-        success: true,
-        message: 'Email not configured — use OTP on screen',
-        devOtp: otp,
-      })
-    }
-
-    try {
-      await sendOtpEmail(email, otp, fullName)
-      res.json({ success: true, message: 'OTP sent to your email' })
-    } catch (mailErr) {
-      console.error('send-otp email failed:', mailErr.message)
-      console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
+    // Try SMS first
+    if (process.env.FAST2SMS_API_KEY) {
+      try {
+        await sendOtpSms(mobile, otp)
+        res.json({ success: true, message: 'OTP sent to your mobile' })
+      } catch (smsErr) {
+        console.error('send-otp SMS failed:', smsErr.message)
+        console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
+        res.json({
+          success: true,
+          message: 'SMS could not be sent. Use OTP shown on screen.',
+          devOtp: otp,
+        })
+      }
+    } else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      // Fallback to email if SMS not configured
+      try {
+        await sendOtpEmail(email, otp, fullName)
+        res.json({ success: true, message: 'OTP sent to your email' })
+      } catch (mailErr) {
+        console.error('send-otp email failed:', mailErr.message)
+        console.log(`[DEV OTP fallback] user="${username}" code=${otp}`)
+        res.json({
+          success: true,
+          message: 'Email could not be sent. Use OTP shown on screen.',
+          devOtp: otp,
+        })
+      }
+    } else {
+      console.log(`[DEV OTP] No SMS or email configured. user="${username}" code=${otp}`)
       res.json({
         success: true,
-        message: 'Email could not be sent. Use OTP shown on screen.',
+        message: 'SMS/Email not configured — use OTP on screen',
         devOtp: otp,
       })
     }

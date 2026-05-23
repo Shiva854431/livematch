@@ -30,3 +30,32 @@ export async function sendOtpEmail(to, otp, fullName) {
     `,
   })
 }
+
+export async function sendOtpSms(mobile, otp) {
+  const apiKey = process.env.FAST2SMS_API_KEY
+  if (!apiKey) {
+    throw new Error('Fast2SMS API key not configured')
+  }
+
+  const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+    method: 'POST',
+    headers: {
+      'authorization': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      route: 'q',
+      message: `Your Strider Live OTP is: ${otp}. Valid for 10 minutes.`,
+      language: 'english',
+      flash: 0,
+      numbers: mobile,
+    }),
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    throw new Error(data.message || 'SMS sending failed')
+  }
+
+  return data
+}
