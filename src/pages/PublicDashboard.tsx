@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Search, Video, Shield, Radio } from 'lucide-react'
+import { Bell, Search, Video, Shield, Radio, User, Settings, Info, X } from 'lucide-react'
 import { LeftSidebar } from '../components/LeftSidebar'
 import { LiveTicker } from '../components/LiveTicker'
 import { LiveMatchHero } from '../components/LiveMatchHero'
@@ -16,6 +16,9 @@ interface PublicDashboardProps {
 export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
   const { state, activeMatch, setActiveMatchId, getMatch, sportStore } = useMatches()
   const [selectedSport, setSelectedSport] = useState<Sport | 'all'>('all')
+  const [showProfile, setShowProfile] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
 
   const loadMatch = (id: string) => {
     if (getMatch(id)) setActiveMatchId(id)
@@ -46,6 +49,30 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
           <div className="flex items-center gap-2 ml-auto">
             <button
               type="button"
+              onClick={() => setShowAbout(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
+            >
+              <Info className="h-4 w-4" />
+              About
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
+            >
+              <Settings className="h-4 w-4" />
+              Settings
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowProfile(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
+            >
+              <User className="h-4 w-4" />
+              Profile
+            </button>
+            <button
+              type="button"
               onClick={() => onNavigate('/admin/login')}
               className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl text-slate-300 text-sm font-medium border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
             >
@@ -66,7 +93,13 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
             >
               <Bell className="h-5 w-5" />
             </button>
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 ring-2 ring-white/10 shadow-lg" />
+            <button
+              type="button"
+              onClick={() => setShowProfile(true)}
+              className="sm:hidden h-10 w-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 ring-2 ring-white/10 shadow-lg flex items-center justify-center"
+            >
+              <User className="h-5 w-5 text-white" />
+            </button>
           </div>
         </header>
 
@@ -172,6 +205,122 @@ export function PublicDashboard({ onNavigate }: PublicDashboardProps) {
           />
         </main>
       </div>
+
+      {/* Profile Modal */}
+      {showProfile && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-strong rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Profile</h2>
+              <button type="button" onClick={() => setShowProfile(false)} className="p-1 hover:bg-white/10 rounded-lg">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center">
+                  <User className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold">Guest User</p>
+                  <p className="text-sm text-slate-400">Welcome to Strider Live</p>
+                </div>
+              </div>
+              <div className="pt-4 border-t border-slate-700">
+                <p className="text-sm text-slate-400 mb-2">Account Type</p>
+                <p className="font-medium">Public Viewer</p>
+              </div>
+              <div className="pt-4 border-t border-slate-700">
+                <p className="text-sm text-slate-400 mb-2">Favorite Sports</p>
+                <div className="flex gap-2 flex-wrap">
+                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Cricket</span>
+                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Kabaddi</span>
+                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Football</span>
+                  <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs">Basketball</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-strong rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Settings</h2>
+              <button type="button" onClick={() => setShowSettings(false)} className="p-1 hover:bg-white/10 rounded-lg">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm">Dark Mode</span>
+                <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
+                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm">Notifications</span>
+                <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
+                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm">Auto-refresh matches</span>
+                <div className="w-12 h-6 bg-emerald-500 rounded-full relative">
+                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                </div>
+              </div>
+              <div className="pt-4 border-t border-slate-700">
+                <p className="text-sm text-slate-400 mb-2">Language</p>
+                <select className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-600 text-sm">
+                  <option>English</option>
+                  <option>Hindi</option>
+                  <option>Telugu</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* About Modal */}
+      {showAbout && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-strong rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">About Strider Live</h2>
+              <button type="button" onClick={() => setShowAbout(false)} className="p-1 hover:bg-white/10 rounded-lg">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center mx-auto mb-3">
+                  <Radio className="h-8 w-8 text-white" />
+                </div>
+                <p className="font-display font-bold tracking-wide text-lg">STRIDER LIVE</p>
+                <p className="text-sm text-slate-400">Version 1.0.0</p>
+              </div>
+              <div className="pt-4 border-t border-slate-700">
+                <p className="text-sm text-slate-400 mb-2">Features</p>
+                <ul className="text-sm space-y-1">
+                  <li>• Live match scores and updates</li>
+                  <li>• Multi-sport support (Cricket, Kabaddi, Football, Basketball)</li>
+                  <li>• Real-time statistics</li>
+                  <li>• Team and player information</li>
+                </ul>
+              </div>
+              <div className="pt-4 border-t border-slate-700">
+                <p className="text-sm text-slate-400">Contact</p>
+                <p className="text-sm">support@striderlive.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
