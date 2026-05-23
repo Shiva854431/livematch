@@ -6,11 +6,12 @@ import { TeamsSection } from '../components/admin/TeamsSection'
 import { LiveMatchSection } from '../components/admin/LiveMatchSection'
 import { UpcomingSection } from '../components/admin/UpcomingSection'
 import { TopScorersSection } from '../components/admin/TopScorersSection'
+import { SeasonStatsSection } from '../components/admin/SeasonStatsSection'
 import { SPORT_OPTIONS } from '../types/sportAdmin'
 import type { Sport } from '../types'
 import type { Route } from '../hooks/useRouter'
 
-type AdminTab = 'teams' | 'live' | 'upcoming' | 'scorers'
+type AdminTab = 'teams' | 'live' | 'upcoming' | 'scorers' | 'stats'
 
 interface AdminDashboardProps {
   onNavigate: (route: Route) => void
@@ -32,6 +33,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     { id: 'live', label: 'Live Match' },
     { id: 'upcoming', label: 'Upcoming' },
     { id: 'scorers', label: 'Top Scorers' },
+    { id: 'stats', label: 'Season Stats' },
   ]
 
   return (
@@ -123,6 +125,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 {tab === 'live' && <LiveMatchSection sport={sport} data={data} onSave={save} />}
                 {tab === 'upcoming' && <UpcomingSection data={data} onSave={save} />}
                 {tab === 'scorers' && <TopScorersSection data={data} onSave={save} />}
+                {tab === 'stats' && <SeasonStatsSection sport={sport} data={data} onSave={save} />}
               </>
             )}
           </main>
