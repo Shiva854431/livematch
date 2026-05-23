@@ -273,6 +273,113 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
   })
 })
 
+// ——— User Auth ———
+
+app.post('/api/user/login', async (req, res) => {
+  try {
+    const { username, password } = req.body
+    const users = storeApi.getUsers()
+    const user = users.find((u) => u.username === username)
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      return res.status(401).json({ error: 'Invalid username or password' })
+    }
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' },
+    )
+    res.json({
+      token,
+      user: {
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        state: user.state,
+        theme: user.theme,
+      },
+    })
+  } catch (err) {
+    console.error('user/login', err)
+    res.status(500).json({ error: 'Login failed' })
+  }
+})
+
+app.post('/api/user/register', async (req, res) => {
+  try {
+    const { fullName, email, username, password } = req.body
+    if (!fullName || !email || !username || !password) {
+      return res.status(400).json({ error: 'All fields are required' })
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' })
+    }
+
+    const users = storeApi.getUsers()
+    if (users.some((u) => u.username === username)) {
+      return res.status(400).json({ error: 'Username already taken' })
+    }
+    if (users.some((u) => u.email === email)) {
+      return res.status(400).json({ error: 'Email already registered' })
+    }
+
+    const user = {
+      id: crypto.randomUUID(),
+      fullName,
+      email,
+      username,
+      passwordHash: await bcrypt.hash(password, 10),
+      theme: 'dark',
+      favoriteTeams: [],
+      favoritePlayers: [],
+      favoriteMatches: [],
+      createdAt: new Date().toISOString(),
+    }
+    users.push(user)
+    storeApi.saveUsers(users)
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' },
+    )
+    res.json({
+      token,
+      user: {
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        theme: user.theme,
+      },
+    })
+  } catch (err) {
+    console.error('user/register', err)
+    res.status(500).json({ error: 'Registration failed' })
+  }
+})
+
+app.get('/api/user/me', (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    if (!token) return res.status(401).json({ error: 'No token provided' })
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const users = storeApi.getUsers()
+    const user = users.find((u) => u.id === decoded.id)
+    if (!user) return res.status(404).json({ error: 'User not found' })
+    res.json({
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      theme: user.theme,
+      favoriteTeams: user.favoriteTeams,
+      favoritePlayers: user.favoritePlayers,
+      favoriteMatches: user.favoriteMatches,
+    })
+  } catch (err) {
+    console.error('user/me', err)
+    res.status(401).json({ error: 'Invalid token' })
+  }
+})
+
 // ——— Public state ———
 
 app.get('/api/public/state', (_req, res) => {
