@@ -32,7 +32,8 @@ export function UserAuth({ onNavigate }: UserAuthProps) {
       } else {
         await register(formData)
       }
-      onNavigate('/')
+      // After successful registration or login, navigate to home
+      window.location.href = '/'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed')
     } finally {

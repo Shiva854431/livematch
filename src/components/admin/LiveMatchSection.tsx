@@ -1,5 +1,4 @@
 import { Play, Pause, Trophy } from 'lucide-react'
-import { useState, useEffect } from 'react'
 import type { LiveMatch, Player, Sport, WinnerSide } from '../../types'
 import type { SportData, TeamRecord } from '../../types/sportAdmin'
 
